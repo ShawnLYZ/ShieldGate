@@ -1,0 +1,24 @@
+# Case Study: AI Governance & Responsible AI in Enterprise
+
+## Description:
+As organisations embed generative AI and machine learning tools into everyday workflows, the pace of adoption is beginning to outrun the policies meant to control it. Employees now reach for AI assistants for coding, drafting, analysis, and customer communication long before IT, legal, and compliance teams have agreed on what is safe to share with these tools. This creates a governance gap: AI is generating real productivity gains, but often without the oversight, transparency, or accountability that would normally accompany a new enterprise system.
+
+The scale of this gap is significant. Survey data collected in early 2026 found that nearly half of employees use AI tools their employer has not approved, with a majority of free-tool users doing so without any enterprise-grade data protection. This so-called “shadow AI” problem is not confined to junior staff either; a large share of C-suite executives say they tolerate unapproved AI use because the productivity gains are too valuable to slow down. The financial exposure is measurable too: breaches involving AI-related tools now carry a substantial cost premium over conventional data breaches, driven largely by slower detection and limited forensic visibility into what data entered a given AI tool.
+
+The challenge is to design a system or framework that ensures AI governance, including data protection, transparency, and ethical use. In practice, this means knowing which AI tools are in use, who is allowed to use them, what data they can see, and how their outputs get checked. Frameworks such as the NIST AI Risk Management Framework organise responsible AI practice around four functions: Govern, Map, Measure, and Manage, and are increasingly used as the practical backbone underneath emerging regulation such as the EU AI Act. Access to a given AI model is also not guaranteed to stay the same. In June 2026, the U.S. government briefly ordered Anthropic to suspend access to two of its newest models, Claude Fable 5 and Claude Mythos 5, for every foreign national worldwide, before lifting the restriction weeks later. The trigger was a cybersecurity concern: Amazon researchers reported a way to jailbreak Fable 5's safeguards, prompting the model to identify software vulnerabilities and, in one case, produce exploit code.
+
+## Key Challenges
+1. Ensuring Responsible AI Usage, and Employee Compliance: 
+Employees adopt new AI tools far faster than governance processes can be written for them, and outright bans tend to push usage further out of sight rather than eliminating it. A workable system needs to make the approved path the easiest path: a new AI tool needs to be approvable in days, not months, while still capturing what data it will touch and who is at risk. The primary difficulty here is organisational and behavioural as much as technical, the system must change how thousands of employees across departments behave, not justprocess a data feed. This is a matter of building willing compliance, not just introducing regulations.
+
+2. Data Privacy and Security:
+AI tools make it possible to move data outside an organisation’s control with a single click, because prompts, documents, and outputs can be pasted into a chat window in seconds. A simple solution that comes to mind is that the framework must classify data sensitivity, restrict which categories of information may be shared with which class of AI tool, and maintain a record of AI usage that can satisfy both internal audit at the company and external government regulators. This differs from a conventional cybersecurity monitoring problem in that the “attack surface” is often an authorised employee using an unauthorised tool, rather than an external adversary.
+
+3. Transparency and Ethical Boundaries in AI Use:
+Being transparent and ethical means more than avoiding bias or technical mistakes, it's about whether someone affected by an AI-assisted decision can find out AI was involved, and get a plain explanation for the outcome as well as a redressal pathway. Where an AI tool helps decide something that affects a person, that person should be able to learn that AI played a part and ask for the decision to be looked at again. This also means setting clear limits on what AI should never be used for, even where it's technically possible such as covertly monitoring employees or profiling people without their knowledge.
+
+## Example Use Cases
+1. Build framework to monitor AI model risks (Bias and Data Leakage)
+2. Implement approval workflow for AI tool usage
+3. Develop dashboard to track AI usage across departments
+4. Suggest policies or automated checks for sensitive data

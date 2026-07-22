@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mock AI Chat — ShieldGate demo target</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header><h1>Mock AI Chat</h1><p>A stand-in AI assistant for ShieldGate demos and tests.</p></header>
+    <main id="messages" data-testid="messages"></main>
+    <form id="composer-form">
+      <textarea id="composer" data-testid="composer" rows="3"
+                placeholder="Message Mock AI..."></textarea>
+      <button id="send" data-testid="send" type="submit">Send</button>
+    </form>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,621 @@
+{
+  "$ref": "#/definitions/ShieldGatePolicy",
+  "definitions": {
+    "ShieldGatePolicy": {
+      "type": "object",
+      "properties": {
+        "MatrixCell": {
+          "type": "object",
+          "properties": {
+            "data_category": {
+              "type": "string",
+              "enum": [
+                "public",
+                "internal",
+                "confidential",
+                "restricted"
+              ]
+            },
+            "tier": {
+              "type": "number",
+              "enum": [
+                0,
+                1,
+                2
+              ]
+            },
+            "action": {
+              "type": "string",
+              "enum": [
+                "allow",
+                "warn",
+                "block"
+              ]
+            }
+          },
+          "required": [
+            "data_category",
+            "tier",
+            "action"
+          ],
+          "additionalProperties": false
+        },
+        "SnapshotTool": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "domains": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "tier": {
+              "type": "number",
+              "enum": [
+                0,
+                1,
+                2
+              ]
+            },
+            "capability_tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "continuity_status": {
+              "type": "string",
+              "enum": [
+                "active",
+                "advisory",
+                "suspended"
+              ]
+            },
+            "fallback_tool_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "domains",
+            "tier",
+            "capability_tags",
+            "continuity_status",
+            "fallback_tool_id"
+          ],
+          "additionalProperties": false
+        },
+        "PolicySnapshot": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "integer"
+            },
+            "generated_at": {
+              "type": "string"
+            },
+            "matrix": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "data_category": {
+                    "type": "string",
+                    "enum": [
+                      "public",
+                      "internal",
+                      "confidential",
+                      "restricted"
+                    ]
+                  },
+                  "tier": {
+                    "type": "number",
+                    "enum": [
+                      0,
+                      1,
+                      2
+                    ]
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "allow",
+                      "warn",
+                      "block"
+                    ]
+                  }
+                },
+                "required": [
+                  "data_category",
+                  "tier",
+                  "action"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "domains": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "tier": {
+                    "type": "number",
+                    "enum": [
+                      0,
+                      1,
+                      2
+                    ]
+                  },
+                  "capability_tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "continuity_status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "advisory",
+                      "suspended"
+                    ]
+                  },
+                  "fallback_tool_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "domains",
+                  "tier",
+                  "capability_tags",
+                  "continuity_status",
+                  "fallback_tool_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "version",
+            "generated_at",
+            "matrix",
+            "tools"
+          ],
+          "additionalProperties": false
+        },
+        "ClassifyMatch": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string"
+            },
+            "span": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "masked": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "span",
+            "masked"
+          ],
+          "additionalProperties": false
+        },
+        "ClassifyRequest": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "type": "string",
+              "enum": [
+                "prompt",
+                "response"
+              ]
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1
+            },
+            "tool_domain": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            },
+            "client_matches": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            },
+            "policy_version": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "direction",
+            "text",
+            "tool_domain"
+          ],
+          "additionalProperties": false
+        },
+        "ClassifyResponse": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "enum": [
+                "public",
+                "internal",
+                "confidential",
+                "restricted"
+              ]
+            },
+            "action": {
+              "type": "string",
+              "enum": [
+                "allow",
+                "warn",
+                "block"
+              ]
+            },
+            "matches": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "span": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  },
+                  "masked": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "span",
+                  "masked"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "maskable": {
+              "type": "boolean"
+            },
+            "reason_plain": {
+              "type": "string"
+            },
+            "coaching": {
+              "type": "object",
+              "properties": {
+                "show": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "show"
+              ],
+              "additionalProperties": false
+            },
+            "suggestion": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "tool_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "domain": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "tool_id",
+                    "name",
+                    "domain"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "policy_version": {
+              "type": "integer"
+            },
+            "degraded": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "category",
+            "action",
+            "matches",
+            "maskable",
+            "reason_plain",
+            "coaching",
+            "suggestion",
+            "policy_version",
+            "degraded"
+          ],
+          "additionalProperties": false
+        },
+        "EventIn": {
+          "type": "object",
+          "properties": {
+            "event_type": {
+              "type": "string"
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "prompt",
+                "response",
+                "system"
+              ]
+            },
+            "tool_domain": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null
+            },
+            "data_category": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "public",
+                    "internal",
+                    "confidential",
+                    "restricted"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "matrix_action": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "allow",
+                    "warn",
+                    "block"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "pattern_types": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            },
+            "masked_excerpt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null
+            },
+            "degraded": {
+              "type": "boolean",
+              "default": false
+            },
+            "occurred_at": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "event_type",
+            "direction"
+          ],
+          "additionalProperties": false
+        },
+        "EventBatch": {
+          "type": "object",
+          "properties": {
+            "events": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event_type": {
+                    "type": "string"
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "prompt",
+                      "response",
+                      "system"
+                    ]
+                  },
+                  "tool_domain": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "default": null
+                  },
+                  "data_category": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "public",
+                          "internal",
+                          "confidential",
+                          "restricted"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "matrix_action": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "allow",
+                          "warn",
+                          "block"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "pattern_types": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "masked_excerpt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "default": null
+                  },
+                  "degraded": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "occurred_at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "default": null
+                  }
+                },
+                "required": [
+                  "event_type",
+                  "direction"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1,
+              "maxItems": 200
+            }
+          },
+          "required": [
+            "events"
+          ],
+          "additionalProperties": false
+        },
+        "ApprovalStatus": {
+          "type": "string",
+          "enum": [
+            "submitted",
+            "triaged",
+            "under_review",
+            "info_requested",
+            "approved",
+            "rejected",
+            "auto_rejected"
+          ]
+        }
+      },
+      "required": [
+        "MatrixCell",
+        "SnapshotTool",
+        "PolicySnapshot",
+        "ClassifyMatch",
+        "ClassifyRequest",
+        "ClassifyResponse",
+        "EventIn",
+        "EventBatch",
+        "ApprovalStatus"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

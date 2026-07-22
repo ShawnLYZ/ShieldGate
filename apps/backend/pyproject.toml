@@ -1,0 +1,44 @@
+[project]
+name = "shieldgate-backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "asyncpg>=0.30",
+    "pydantic>=2.11",
+    "pydantic-settings>=2.9",
+    "httpx>=0.28",
+    "pyjwt>=2.13.0",
+    "cryptography>=43",
+    "feedparser>=6.0.12",
+    "python-multipart>=0.0.32",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.26",
+    "respx>=0.22",
+    "ruff>=0.11",
+    "datamodel-code-generator>=0.31",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-m 'not eval'"
+markers = [
+    "eval: requires a real local Ollama model pulled and reachable; excluded from default runs, invoke explicitly with `-m eval`",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/shieldgate"]

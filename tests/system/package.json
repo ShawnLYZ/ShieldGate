@@ -1,0 +1,7 @@
+{
+  "name": "system-tests",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "playwright test" },
+  "devDependencies": { "@playwright/test": "^1.53.0", "typescript": "^5.8.3" }
+}

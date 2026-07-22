@@ -1,0 +1,100 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.10.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - uses: astral-sh/setup-uv@v5
+      - run: pnpm install --frozen-lockfile
+      - run: uv --directory apps/backend sync
+      - name: policy freshness
+        run: bash scripts/check-policy-fresh.sh
+      - run: pnpm lint
+      - run: pnpm typecheck
+      # Unit suites for the extension + policy package. Scoped by filter on
+      # purpose: tests/system also defines a `test` script, and that one is
+      # Playwright — it belongs to the system-seam1 job, not here.
+      - name: unit tests (extension, policy)
+        run: pnpm --filter extension --filter @shieldgate/policy test
+      - run: uv --directory apps/backend run ruff check .
+      # Blocking as of the review-2 batch: the connection-typing pass landed
+      # (db.DbConn covers pool.acquire()'s PoolConnectionProxy, which forwards the
+      # Connection interface without subclassing it), so the backend is at zero
+      # pyright errors and regressions now fail CI instead of scrolling past.
+      # Config: apps/backend/pyrightconfig.json.
+      - name: pyright
+        working-directory: apps/backend
+        run: npx -y pyright@1.1.390
+
+  backend-seam2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.10.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - uses: astral-sh/setup-uv@v5
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - run: pnpm install --frozen-lockfile
+      - run: supabase start
+      - run: supabase db reset
+      - run: uv --directory apps/backend sync
+      - name: seam 2 (backend contract)
+        run: uv --directory apps/backend run pytest -v
+        env:
+          SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+
+  system-seam1:
+    runs-on: ubuntu-latest
+    needs: [static, backend-seam2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.10.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - uses: astral-sh/setup-uv@v5
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - run: pnpm install --frozen-lockfile
+      - run: supabase start
+      - run: supabase db reset
+      - name: capture anon key
+        run: echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(supabase status --output json | jq -r .ANON_KEY)" >> apps/dashboard/.env.local
+      - run: |
+          echo "NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321" >> apps/dashboard/.env.local
+          echo "NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:8000" >> apps/dashboard/.env.local
+      - run: uv --directory apps/backend sync
+      - run: pnpm --filter @shieldgate/policy build
+      - run: pnpm --filter extension build
+      - run: pnpm --filter mock-ai build
+      - run: pnpm --filter dashboard build
+      - name: start services
+        # CLASSIFIER_PROVIDER=fake: seam 1 must never call a third-party service
+        # (PRD Testing Decisions), and the deterministic marker provider is what
+        # makes context-only categories reachable — the approval journey's
+        # policy-sync tail needs an `internal` verdict, which no regex produces.
+        # Substituted at its natural interface, by configuration.
+        env:
+          CLASSIFIER_PROVIDER: fake
+        run: |
+          uv --directory apps/backend run uvicorn shieldgate.main:app --port 8000 &
+          pnpm --filter mock-ai preview &
+          pnpm --filter dashboard start &
+          # http-get:// (not http://) for the API: wait-on probes http:// URLs
+          # with HEAD, and FastAPI — unlike bare Starlette — does not add HEAD to
+          # GET routes, so /health answers 405 and the gate never opens.
+          npx wait-on http-get://127.0.0.1:8000/api/v1/health http://localhost:5175 http://localhost:3000 -t 120000
+      - run: pnpm --filter system-tests exec playwright install --with-deps chromium
+      - name: seam 1 (system)
+        run: xvfb-run -a pnpm --filter system-tests test

@@ -1,0 +1,25 @@
+/* Print-optimized layout for the executive report (window.print() / "Save as
+   PDF"). Tailwind's print:hidden variant (see app/layout.tsx) already drops
+   the nav chrome; this file handles the report's own internals. */
+@media print {
+  .report-no-print {
+    display: none !important;
+  }
+
+  .report-page {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .report-section {
+    break-inside: avoid;
+  }
+
+  .report-stat-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  body {
+    background: white !important;
+  }
+}

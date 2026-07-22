@@ -1,0 +1,8 @@
+body { font-family: system-ui, sans-serif; max-width: 720px; margin: 0 auto; padding: 1rem; }
+#messages { min-height: 40vh; display: flex; flex-direction: column; gap: .5rem; }
+.msg { border: 1px solid #ddd; border-radius: 8px; padding: .5rem .75rem; }
+.msg.user { background: #eef4ff; align-self: flex-end; }
+.msg.assistant { background: #f7f7f7; align-self: flex-start; }
+.msg pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
+#composer-form { display: flex; gap: .5rem; margin-top: 1rem; }
+#composer { flex: 1; }

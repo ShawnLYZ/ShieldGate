@@ -1,0 +1,17 @@
+{
+  "name": "shieldgate",
+  "private": true,
+  "packageManager": "pnpm@9.10.0",
+  "scripts": {
+    "gen:policy": "pnpm --filter @shieldgate/policy build && uv --directory apps/backend run datamodel-codegen --input ../../packages/policy/schema/policy.schema.json --input-file-type jsonschema --output src/shieldgate/generated/models.py --output-model-type pydantic_v2.BaseModel --target-python-version 3.12 --disable-timestamp",
+    "typecheck": "pnpm -r --filter \"./apps/extension\" --filter \"./apps/dashboard\" --filter \"./packages/*\" exec tsc --noEmit",
+    "lint": "pnpm -r --no-bail exec eslint . --max-warnings 0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "supabase": "2.109.1",
+    "eslint": "^9.24.0",
+    "typescript-eslint": "^8.30.0",
+    "@eslint/js": "^9.24.0"
+  }
+}

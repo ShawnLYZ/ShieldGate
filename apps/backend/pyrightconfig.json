@@ -1,0 +1,7 @@
+{
+  "include": ["src"],
+  "exclude": ["src/shieldgate/generated", "**/__pycache__"],
+  "venvPath": ".",
+  "venv": ".venv",
+  "typeCheckingMode": "basic"
+}

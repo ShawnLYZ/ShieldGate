@@ -1,0 +1,43 @@
+# ── Secrets — never commit ───────────────────────────────
+API Key.md
+.env
+.env.*
+!.env.example
+
+# ── Node / TypeScript ────────────────────────────────────
+node_modules/
+.next/
+.output/
+.wxt/
+dist/
+*.tsbuildinfo
+coverage/
+
+# ── Python ───────────────────────────────────────────────
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ── Supabase local stack ─────────────────────────────────
+supabase/.temp/
+supabase/.branches/
+
+# ── Test artifacts ───────────────────────────────────────
+playwright-report/
+test-results/
+
+# ── Editor / OS / local settings ─────────────────────────
+.claude/settings.local.json
+.claude/worktrees/
+.vscode/
+.idea/
+.DS_Store
+*.log
+
+docs/
+Additional Feature.md
+PRD.md
+ShieldGate.md
