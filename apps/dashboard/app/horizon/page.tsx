@@ -1,12 +1,18 @@
 import { WatchList } from "@/components/watch-list";
+import { Card } from "@/components/ui/card";
+import { PageHeader, PageShell } from "@/components/ui/page";
 
 export default function Horizon() {
   return (
-    <main className="p-8">
-      <h1 className="mb-6 text-2xl font-semibold">Regulatory horizon</h1>
-      <div className="rounded-lg border bg-white p-4">
+    <PageShell>
+      <PageHeader
+        eyebrow="Govern"
+        title="Regulatory horizon"
+        description="Watched sources for rules that would change the policy matrix. Anything published after the last matrix bump is flagged as possibly stale."
+      />
+      <Card>
         <WatchList />
-      </div>
-    </main>
+      </Card>
+    </PageShell>
   );
 }

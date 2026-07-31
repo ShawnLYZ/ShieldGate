@@ -2,12 +2,13 @@
 import { useEffect, useState } from "react";
 import { authedGet, authedPost } from "@/lib/api";
 import type { AppealRow, DecisionRegistrationRow } from "@/lib/types";
-
-const STATUS_BADGE: Record<AppealRow["status"], string> = {
-  open: "bg-amber-100 text-amber-800",
-  in_review: "bg-blue-100 text-blue-800",
-  resolved: "bg-green-100 text-green-800",
-};
+import { StatusBadge } from "@/components/ui/badge";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GradientButton } from "@/components/ui/gradient-button";
+import { Input } from "@/components/ui/field";
+import { CheckIcon, ScaleIcon, SpinnerIcon } from "@/components/ui/icons";
+import { EmptyState, ErrorNote, Loading } from "@/components/ui/page";
+import { EmptyRow, TBody, THead, Table, TableScroll, Td, Tr } from "@/components/ui/table";
 
 export function DecisionsPanel() {
   const [decisions, setDecisions] = useState<DecisionRegistrationRow[]>([]);
@@ -46,82 +47,111 @@ export function DecisionsPanel() {
     }
   }
 
-  if (error) return <div className="text-sm text-red-600">{error}</div>;
-  if (!loaded) return <div className="text-sm text-gray-500">Loading…</div>;
+  if (error) return <ErrorNote>{error}</ErrorNote>;
+  if (!loaded) return <Loading />;
 
   return (
-    <div className="grid gap-6">
-      <div className="rounded-lg border bg-white p-4">
-        <h2 className="mb-2 text-lg font-medium">Decision registrations</h2>
-        {decisions.length === 0 ? (
-          <div className="text-sm text-gray-500">No decisions registered yet.</div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead><tr className="text-left text-gray-500">
-              <th className="p-2">Reference</th><th>System</th><th>Model</th><th>Decided</th>
-            </tr></thead>
-            <tbody>
+    <div className="grid gap-4">
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle>Decision registrations</CardTitle>
+            <CardDescription>Each carries a public reference anyone can look up without an account</CardDescription>
+          </div>
+        </CardHeader>
+        <TableScroll>
+          <Table>
+            <THead>
+              <tr><th>Reference</th><th>System</th><th>Model</th><th>Decided</th></tr>
+            </THead>
+            <TBody>
+              {decisions.length === 0 && (
+                <EmptyRow colSpan={4}>
+                  <EmptyState
+                    icon={<ScaleIcon size={18} />}
+                    title="No decisions registered yet"
+                    description="Register one via the API and its DR reference becomes publicly resolvable."
+                  />
+                </EmptyRow>
+              )}
               {decisions.map((d) => (
-                <tr key={d.public_ref} data-testid="decision-row" className="border-t">
-                  <td className="p-2 font-medium">{d.public_ref}</td>
-                  <td>{d.system_name}</td>
-                  <td>{d.model_used}</td>
-                  <td>{new Date(d.decided_at).toLocaleString()}</td>
-                </tr>
+                <Tr key={d.public_ref} data-testid="decision-row">
+                  <Td className="whitespace-nowrap font-mono text-xs font-medium text-[var(--sg-fg)]">{d.public_ref}</Td>
+                  <Td>{d.system_name}</Td>
+                  <Td muted>{d.model_used}</Td>
+                  <Td className="whitespace-nowrap tabular-nums">{new Date(d.decided_at).toLocaleString()}</Td>
+                </Tr>
               ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+            </TBody>
+          </Table>
+        </TableScroll>
+      </Card>
 
-      <div className="rounded-lg border bg-white p-4">
-        <h2 className="mb-2 text-lg font-medium">Appeals</h2>
-        {appeals.length === 0 ? (
-          <div className="text-sm text-gray-500">No appeals filed yet.</div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead><tr className="text-left text-gray-500">
-              <th className="p-2">Reference</th><th>Decision</th><th>Reason</th>
-              <th>Status</th><th>Filed</th><th>Resolve</th>
-            </tr></thead>
-            <tbody>
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle>Appeals</CardTitle>
+            <CardDescription>Filed by the people a registered decision was made about</CardDescription>
+          </div>
+        </CardHeader>
+        <TableScroll>
+          <Table>
+            <THead>
+              <tr>
+                <th>Reference</th><th>Decision</th><th>Reason</th>
+                <th>Status</th><th>Filed</th><th>Resolve</th>
+              </tr>
+            </THead>
+            <TBody>
+              {appeals.length === 0 && (
+                <EmptyRow colSpan={6}>
+                  <EmptyState
+                    icon={<ScaleIcon size={18} />}
+                    title="No appeals filed yet"
+                    description="Appeals arrive from the public lookup page."
+                  />
+                </EmptyRow>
+              )}
               {appeals.map((a) => (
-                <tr key={a.id} data-testid="appeal-row" className="border-t align-top">
-                  <td className="p-2 font-medium">{a.public_ref}</td>
-                  <td>{a.decision_ref}</td>
-                  <td className="max-w-xs truncate" title={a.reason}>{a.reason}</td>
-                  <td>
-                    <span className={`rounded px-2 py-0.5 text-xs ${STATUS_BADGE[a.status]}`}>
-                      {a.status.replace("_", " ")}
-                    </span>
-                  </td>
-                  <td>{new Date(a.created_at).toLocaleDateString()}</td>
-                  <td>
+                <Tr key={a.id} data-testid="appeal-row">
+                  <Td className="whitespace-nowrap font-mono text-xs font-medium text-[var(--sg-fg)]">{a.public_ref}</Td>
+                  <Td className="whitespace-nowrap font-mono text-xs text-[var(--sg-muted)]">{a.decision_ref}</Td>
+                  <Td className="max-w-[26ch] truncate" title={a.reason}>{a.reason}</Td>
+                  <Td><StatusBadge status={a.status} /></Td>
+                  <Td className="whitespace-nowrap tabular-nums">{new Date(a.created_at).toLocaleDateString()}</Td>
+                  <Td>
                     {a.status === "resolved" ? (
-                      <span className="text-xs text-gray-500">{a.resolution_note ?? "—"}</span>
+                      <span className="text-xs text-[var(--sg-muted)]">{a.resolution_note ?? "—"}</span>
                     ) : (
-                      <div className="flex flex-col gap-1">
-                        <input
+                      <div className="flex w-[176px] flex-col gap-1.5">
+                        <Input
                           type="text"
                           placeholder="resolution note"
+                          aria-label={`Resolution note for ${a.public_ref}`}
                           value={notes[a.id] ?? ""}
                           onChange={(e) => setNotes((n) => ({ ...n, [a.id]: e.target.value }))}
-                          className="w-40 rounded border px-1 py-0.5 text-xs"
+                          className="px-2 py-1 text-[11px]"
                         />
-                        <button data-testid={`resolve-appeal-${a.id}`} disabled={pending[a.id]}
+                        <GradientButton
+                          data-testid={`resolve-appeal-${a.id}`}
+                          disabled={pending[a.id]}
                           onClick={() => resolve(a)}
-                          className="rounded bg-green-600 px-2 py-1 text-xs text-white disabled:opacity-50">
+                          size="sm"
+                          variant="success"
+                          className="self-start"
+                        >
+                          {pending[a.id] ? <SpinnerIcon size={12} /> : <CheckIcon size={12} />}
                           Resolve
-                        </button>
+                        </GradientButton>
                       </div>
                     )}
-                  </td>
-                </tr>
+                  </Td>
+                </Tr>
               ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+            </TBody>
+          </Table>
+        </TableScroll>
+      </Card>
     </div>
   );
 }

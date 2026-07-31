@@ -1,6 +1,8 @@
 /* Print-optimized layout for the executive report (window.print() / "Save as
    PDF"). Tailwind's print:hidden variant (see app/layout.tsx) already drops
-   the nav chrome; this file handles the report's own internals. */
+   the nav chrome, and globals.css re-points the --sg-* tokens to a light,
+   ink-cheap set inside @media print; this file handles the report's own
+   internals. */
 @media print {
   .report-no-print {
     display: none !important;
@@ -20,6 +22,36 @@
   }
 
   body {
+    background: white !important;
+  }
+
+  body::before {
+    display: none !important;
+  }
+
+  /* Recharts resolves its colours in JS at render time (lib/chart-theme reads
+     the SCREEN value of --sg-chart-*), so a console printed while in dark mode
+     would otherwise put a pale dark-surface blue on white paper. CSS beats an
+     SVG presentation attribute, so restating the *light-mode validated* values
+     here is what actually lands on the page.
+     node scripts/validate_palette.js "#2a78d6" --mode light -> PASS */
+  .recharts-line-curve,
+  .recharts-curve.recharts-line-curve {
+    stroke: #2a78d6 !important;
+  }
+
+  .recharts-cartesian-grid line,
+  .recharts-cartesian-axis-line {
+    stroke: #e1e0d9 !important;
+  }
+
+  .recharts-text {
+    fill: #6b7280 !important;
+  }
+
+  /* Card surfaces print as plain ruled boxes — no shadow, no tint. */
+  .report-section {
+    box-shadow: none !important;
     background: white !important;
   }
 }

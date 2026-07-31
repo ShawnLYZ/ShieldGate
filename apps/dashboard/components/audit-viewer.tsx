@@ -2,6 +2,19 @@
 import { useEffect, useState } from "react";
 import { authedGet, getAccessToken } from "@/lib/api";
 import type { IncidentRow } from "@/lib/types";
+import { VerdictBadge } from "@/components/ui/badge";
+import { GradientButton } from "@/components/ui/gradient-button";
+import { Input } from "@/components/ui/field";
+import { EmptyState, ErrorNote, Loading } from "@/components/ui/page";
+import { EmptyRow, TBody, THead, Table, TableScroll, Td, Tr } from "@/components/ui/table";
+import {
+  AlertTriangleIcon,
+  CheckCircleIcon,
+  DownloadIcon,
+  LinkChainIcon,
+  SearchIcon,
+  SpinnerIcon,
+} from "@/components/ui/icons";
 
 interface VerifyResult { ok: boolean; first_bad_seq: number | null }
 
@@ -70,63 +83,92 @@ export function AuditViewer() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-2 border-b pb-4">
-        <input
-          type="text"
-          placeholder="Filter by event_type (e.g. output_flag)"
-          value={eventType}
-          onChange={(e) => setEventType(e.target.value)}
-          className="rounded border px-2 py-1 text-sm"
-        />
-        <button onClick={() => load(eventType)} className="rounded bg-gray-800 px-3 py-1.5 text-xs text-white">
-          Apply filter
-        </button>
-        <button data-testid="audit-export-csv" onClick={exportCsv} disabled={exportPending}
-          className="rounded bg-blue-600 px-3 py-1.5 text-xs text-white disabled:opacity-50">
-          {exportPending ? "Exporting…" : "Export CSV"}
-        </button>
-        <button data-testid="audit-verify-chain" onClick={verifyChain} disabled={verifyPending}
-          className="rounded bg-gray-800 px-3 py-1.5 text-xs text-white disabled:opacity-50">
-          {verifyPending ? "Verifying…" : "Verify chain"}
-        </button>
-        {verifyResult && (
-          <span data-testid="verify-result" className={verifyResult.ok ? "text-sm text-green-700" : "text-sm text-red-700"}>
-            {verifyResult.ok
-              ? "✓ Chain intact"
-              : `✗ Tampered — first bad seq ${verifyResult.first_bad_seq}`}
-          </span>
-        )}
+      <div className="flex flex-wrap items-center gap-2 border-b border-[var(--sg-border)] px-4 py-3">
+        <form
+          className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-sm"
+          onSubmit={(e) => { e.preventDefault(); load(eventType); }}
+        >
+          <Input
+            type="text"
+            placeholder="Filter by event_type (e.g. output_flag)"
+            aria-label="Filter by event type"
+            value={eventType}
+            onChange={(e) => setEventType(e.target.value)}
+            className="min-w-0 flex-1 px-2.5 py-1.5 text-xs"
+          />
+          <GradientButton type="submit" size="sm" variant="neutral">
+            <SearchIcon size={13} />
+            Apply
+          </GradientButton>
+        </form>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <GradientButton data-testid="audit-export-csv" onClick={exportCsv} disabled={exportPending} size="sm" variant="ghost">
+            {exportPending ? <SpinnerIcon size={13} /> : <DownloadIcon size={13} />}
+            {exportPending ? "Exporting…" : "Export CSV"}
+          </GradientButton>
+          <GradientButton data-testid="audit-verify-chain" onClick={verifyChain} disabled={verifyPending} size="sm">
+            {verifyPending ? <SpinnerIcon size={13} /> : <LinkChainIcon size={13} />}
+            {verifyPending ? "Verifying…" : "Verify chain"}
+          </GradientButton>
+          {verifyResult && (
+            // A tamper result is the single most consequential thing this page
+            // can say, so it gets a glyph and a word, not just a colour.
+            <span
+              data-testid="verify-result"
+              className={
+                verifyResult.ok
+                  ? "flex items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--sg-allow)_42%,transparent)] bg-[var(--sg-allow-soft)] px-2.5 py-1 text-xs font-medium text-[var(--sg-allow-text)]"
+                  : "flex items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--sg-block)_42%,transparent)] bg-[var(--sg-block-soft)] px-2.5 py-1 text-xs font-medium text-[var(--sg-block-text)]"
+              }
+            >
+              {verifyResult.ok ? <CheckCircleIcon size={13} /> : <AlertTriangleIcon size={13} />}
+              {verifyResult.ok
+                ? "Chain intact"
+                : `Tampered — first bad seq ${verifyResult.first_bad_seq}`}
+            </span>
+          )}
+        </div>
       </div>
 
-      {error && <div className="mb-3 text-sm text-red-600">{error}</div>}
+      {error && <div className="px-4 pt-3"><ErrorNote>{error}</ErrorNote></div>}
 
       {!loaded ? (
-        <div className="text-sm text-gray-500">Loading…</div>
-      ) : rows.length === 0 ? (
-        <div className="text-sm text-gray-500">No audit events match this filter.</div>
+        <Loading />
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-gray-500">
-              <th className="p-2">Seq</th><th>Time</th><th>Dept</th><th>Tool</th>
-              <th>Type</th><th>Category</th><th>Action</th><th>Excerpt</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.seq} data-testid="audit-row" className="border-t">
-                <td className="p-2">{r.seq}</td>
-                <td>{new Date(r.created_at).toLocaleString()}</td>
-                <td>{r.department ?? "—"}</td>
-                <td>{r.tool_domain ?? "—"}</td>
-                <td>{r.event_type}</td>
-                <td>{r.data_category ?? "—"}</td>
-                <td>{r.matrix_action ?? "—"}</td>
-                <td className="max-w-xs truncate">{r.masked_excerpt ?? "—"}</td>
+        <TableScroll>
+          <Table>
+            <THead>
+              <tr>
+                <th>Seq</th><th>Time</th><th>Dept</th><th>Tool</th>
+                <th>Type</th><th>Category</th><th>Action</th><th>Excerpt</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </THead>
+            <TBody>
+              {rows.length === 0 && (
+                <EmptyRow colSpan={8}>
+                  <EmptyState
+                    icon={<LinkChainIcon size={18} />}
+                    title="No audit events match this filter"
+                    description="Clear the event_type filter to see the whole chain."
+                  />
+                </EmptyRow>
+              )}
+              {rows.map((r) => (
+                <Tr key={r.seq} data-testid="audit-row">
+                  <Td numeric className="font-mono text-xs text-[var(--sg-muted)]">{r.seq}</Td>
+                  <Td className="whitespace-nowrap tabular-nums">{new Date(r.created_at).toLocaleString()}</Td>
+                  <Td muted>{r.department ?? "—"}</Td>
+                  <Td className="whitespace-nowrap">{r.tool_domain ?? "—"}</Td>
+                  <Td>{r.event_type}</Td>
+                  <Td muted>{r.data_category ?? "—"}</Td>
+                  <Td><VerdictBadge action={r.matrix_action} /></Td>
+                  <Td className="max-w-[24ch] truncate text-[var(--sg-muted)]">{r.masked_excerpt ?? "—"}</Td>
+                </Tr>
+              ))}
+            </TBody>
+          </Table>
+        </TableScroll>
       )}
     </div>
   );

@@ -1,6 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ApiError, authedGet, authedPatch } from "@/lib/api";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { GradientButton } from "@/components/ui/gradient-button";
+import { Textarea } from "@/components/ui/field";
+import { CheckCircleIcon, SpinnerIcon } from "@/components/ui/icons";
+import { ErrorNote, Loading } from "@/components/ui/page";
 
 export function SettingsEditor({ settingKey, title }: { settingKey: string; title: string }) {
   const [text, setText] = useState("");
@@ -51,33 +56,50 @@ export function SettingsEditor({ settingKey, title }: { settingKey: string; titl
   }
 
   return (
-    <div className="rounded-lg border bg-white p-4">
-      <h2 className="mb-2 text-lg font-medium">{title}</h2>
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <code className="rounded bg-[var(--sg-surface-2)] px-1.5 py-0.5 font-mono text-[11px] text-[var(--sg-muted)]">
+          {settingKey}
+        </code>
+      </CardHeader>
       {!loaded ? (
-        <div className="text-sm text-gray-500">Loading…</div>
+        <Loading />
       ) : loadError ? (
-        <div data-testid={`settings-load-error-${settingKey}`} className="text-sm text-red-600">
-          Could not load this setting ({loadError}). Editing is disabled to avoid overwriting
-          the stored value — reload once the backend is reachable.
-        </div>
+        <CardBody>
+          <div data-testid={`settings-load-error-${settingKey}`}>
+            <ErrorNote>
+              Could not load this setting ({loadError}). Editing is disabled to avoid overwriting
+              the stored value — reload once the backend is reachable.
+            </ErrorNote>
+          </div>
+        </CardBody>
       ) : (
-        <>
-          <textarea
+        <CardBody>
+          <Textarea
             data-testid={`settings-${settingKey}`}
+            aria-label={`${title} JSON`}
             value={text}
             onChange={(e) => { setText(e.target.value); setSaved(false); }}
             rows={8}
             spellCheck={false}
-            className="mb-2 w-full rounded border px-3 py-2 font-mono text-xs"
+            className="mb-3 font-mono text-xs leading-relaxed"
           />
-          <button data-testid={`settings-save-${settingKey}`} onClick={save} disabled={saving}
-            className="rounded bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50">
-            {saving ? "Saving…" : "Save"}
-          </button>
-          {saved && <span className="ml-2 text-sm text-green-700">Saved.</span>}
-          {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
-        </>
+          <div className="flex flex-wrap items-center gap-3">
+            <GradientButton data-testid={`settings-save-${settingKey}`} onClick={save} size="sm" disabled={saving}>
+              {saving ? <SpinnerIcon size={13} /> : null}
+              {saving ? "Saving…" : "Save"}
+            </GradientButton>
+            {saved && (
+              <span className="flex items-center gap-1.5 text-sm text-[var(--sg-allow-text)]">
+                <CheckCircleIcon size={14} />
+                Saved.
+              </span>
+            )}
+          </div>
+          {error && <div className="mt-3"><ErrorNote>{error}</ErrorNote></div>}
+        </CardBody>
       )}
-    </div>
+    </Card>
   );
 }

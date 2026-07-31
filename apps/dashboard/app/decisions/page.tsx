@@ -1,10 +1,15 @@
 import { DecisionsPanel } from "@/components/decisions-panel";
+import { PageHeader, PageShell } from "@/components/ui/page";
 
 export default function Decisions() {
   return (
-    <main className="p-8">
-      <h1 className="mb-6 text-2xl font-semibold">Decisions & appeals</h1>
+    <PageShell>
+      <PageHeader
+        eyebrow="Govern"
+        title="Decisions & appeals"
+        description="AI-assisted decisions registered against a public reference, and the appeals filed against them by the people they affected."
+      />
       <DecisionsPanel />
-    </main>
+    </PageShell>
   );
 }

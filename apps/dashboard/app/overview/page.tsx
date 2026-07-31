@@ -5,6 +5,10 @@ import { IncidentFeed } from "@/components/incident-feed";
 import { CostCounter } from "@/components/cost-counter";
 import { UsageByDepartment } from "@/components/usage-by-department";
 import { UsageByTier } from "@/components/usage-by-tier";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangleIcon, ShieldCheckIcon } from "@/components/ui/icons";
+import { PageHeader, PageShell } from "@/components/ui/page";
+import { StatTile } from "@/components/ui/stat";
 
 export default function Overview() {
   const [count, setCount] = useState<number | null>(null);
@@ -14,21 +18,49 @@ export default function Overview() {
       .then(({ count }) => setCount(count ?? 0));
   }, []);
   return (
-    <main className="p-8">
-      <h1 className="mb-6 text-2xl font-semibold">Overview</h1>
-      <div className="mb-8 grid grid-cols-3 gap-4">
-        <div className="rounded-lg border bg-white p-4">
-          <div className="text-sm text-gray-500">Incidents logged</div>
-          <div data-testid="incident-count" className="text-3xl font-semibold">{count ?? "…"}</div>
-        </div>
+    <PageShell>
+      <PageHeader
+        eyebrow="Monitor"
+        title="Overview"
+        description="Everything the gateway has classified, enforced and recorded — scoped to what your role is allowed to see."
+      />
+
+      <div className="sg-stagger mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <StatTile
+          label="Incidents logged"
+          value={<span data-testid="incident-count">{count ?? "…"}</span>}
+          hint="Append-only, hash-chained audit events"
+          icon={<AlertTriangleIcon size={16} />}
+          tone="warn"
+        />
         <CostCounter />
+        <StatTile
+          label="Enforcement"
+          value="Active"
+          hint="FastAPI is the only writer; clients read via RLS"
+          icon={<ShieldCheckIcon size={16} />}
+          tone="allow"
+        />
       </div>
-      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+
+      <div className="mb-6 grid grid-cols-1 gap-3 xl:grid-cols-2">
         <UsageByDepartment />
         <UsageByTier />
       </div>
-      <h2 className="mb-2 text-lg font-medium">Recent activity</h2>
-      <div className="rounded-lg border bg-white p-4"><IncidentFeed /></div>
-    </main>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent activity</CardTitle>
+          <span className="flex items-center gap-1.5 text-xs text-[var(--sg-muted)]">
+            <span
+              aria-hidden="true"
+              className="sg-live-dot size-1.5 rounded-full bg-[var(--sg-allow)]"
+            />
+            Streaming via Supabase Realtime
+          </span>
+        </CardHeader>
+        <IncidentFeed />
+      </Card>
+    </PageShell>
   );
 }

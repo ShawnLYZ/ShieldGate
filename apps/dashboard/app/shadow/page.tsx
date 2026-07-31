@@ -1,12 +1,18 @@
 import { ShadowQueue } from "@/components/shadow-queue";
+import { Card } from "@/components/ui/card";
+import { PageHeader, PageShell } from "@/components/ui/page";
 
 export default function Shadow() {
   return (
-    <main className="p-8">
-      <h1 className="mb-6 text-2xl font-semibold">Shadow AI discovery</h1>
-      <div className="rounded-lg border bg-white p-4">
+    <PageShell>
+      <PageHeader
+        eyebrow="Monitor"
+        title="Shadow AI discovery"
+        description="AI domains seen in identity-provider logs that are not in the tool registry. Promote one to open an approval request; dismiss the rest."
+      />
+      <Card>
         <ShadowQueue />
-      </div>
-    </main>
+      </Card>
+    </PageShell>
   );
 }

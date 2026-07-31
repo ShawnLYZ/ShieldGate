@@ -4,6 +4,12 @@ import { authedPatch, authedPost } from "@/lib/api";
 import { ContinuityToggle } from "@/components/continuity-toggle";
 import { createClient } from "@/lib/supabase";
 import type { ToolRow } from "@/lib/types";
+import { Badge, TierBadge } from "@/components/ui/badge";
+import { GradientButton } from "@/components/ui/gradient-button";
+import { Field, Input, Select } from "@/components/ui/field";
+import { CheckIcon, PackageIcon } from "@/components/ui/icons";
+import { EmptyState, ErrorNote, Loading } from "@/components/ui/page";
+import { EmptyRow, TBody, THead, Table, TableScroll, Td, Tr } from "@/components/ui/table";
 
 const TIERS = [0, 1, 2];
 
@@ -75,98 +81,145 @@ export function ToolsRegistry() {
     }
   }
 
-  if (!loaded) return <div className="text-sm text-gray-500">Loading…</div>;
+  if (!loaded) return <Loading />;
 
   return (
     <div>
-      {error && <div className="mb-3 text-sm text-red-600">{error}</div>}
-
-      <div className="mb-4">
+      <div className="border-b border-[var(--sg-border)] px-4 py-3">
         {!creating ? (
-          <button data-testid="tool-create-open" onClick={() => setCreating(true)}
-            className="rounded bg-blue-600 px-3 py-1.5 text-xs text-white">Add tool</button>
+          <GradientButton data-testid="tool-create-open" onClick={() => setCreating(true)} size="sm">
+            Add tool
+          </GradientButton>
         ) : (
-          <form data-testid="tool-create-form" onSubmit={createTool}
-            className="flex flex-wrap items-end gap-2 rounded border bg-gray-50 p-3">
-            <input data-testid="tool-create-name" required placeholder="Name" value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="rounded border px-2 py-1 text-xs" />
-            <input required placeholder="Vendor" value={form.vendor}
-              onChange={(e) => setForm((f) => ({ ...f, vendor: e.target.value }))}
-              className="rounded border px-2 py-1 text-xs" />
-            <input data-testid="tool-create-domains" placeholder="domains (comma-separated)" value={form.domains}
-              onChange={(e) => setForm((f) => ({ ...f, domains: e.target.value }))}
-              className="rounded border px-2 py-1 text-xs" />
-            <select value={form.tier} onChange={(e) => setForm((f) => ({ ...f, tier: Number(e.target.value) }))}
-              className="rounded border px-1 py-1 text-xs">
-              {TIERS.map((t) => <option key={t} value={t}>Tier {t}</option>)}
-            </select>
-            <input placeholder="capabilities (comma-separated)" value={form.capability_tags}
-              onChange={(e) => setForm((f) => ({ ...f, capability_tags: e.target.value }))}
-              className="rounded border px-2 py-1 text-xs" />
-            <button data-testid="tool-create-submit" type="submit"
-              className="rounded bg-green-600 px-3 py-1 text-xs text-white">Create</button>
-            <button type="button" onClick={() => setCreating(false)}
-              className="text-xs text-gray-500 underline">cancel</button>
-            {createError && <div className="w-full text-xs text-red-600">{createError}</div>}
+          <form
+            data-testid="tool-create-form"
+            onSubmit={createTool}
+            className="rounded-[var(--sg-radius)] border border-[var(--sg-border)] bg-[var(--sg-surface-2)] p-3"
+          >
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <Field label="Name" htmlFor="tool-name">
+                <Input id="tool-name" data-testid="tool-create-name" required placeholder="e.g. Perplexity"
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  className="px-2.5 py-1.5 text-xs" />
+              </Field>
+              <Field label="Vendor" htmlFor="tool-vendor">
+                <Input id="tool-vendor" required placeholder="e.g. Perplexity AI"
+                  value={form.vendor}
+                  onChange={(e) => setForm((f) => ({ ...f, vendor: e.target.value }))}
+                  className="px-2.5 py-1.5 text-xs" />
+              </Field>
+              <Field label="Domains" htmlFor="tool-domains" hint="Comma-separated hostnames.">
+                <Input id="tool-domains" data-testid="tool-create-domains" placeholder="perplexity.ai, www.perplexity.ai"
+                  value={form.domains}
+                  onChange={(e) => setForm((f) => ({ ...f, domains: e.target.value }))}
+                  className="px-2.5 py-1.5 text-xs" />
+              </Field>
+              <Field label="Tier" htmlFor="tool-tier">
+                <Select id="tool-tier" value={form.tier}
+                  onChange={(e) => setForm((f) => ({ ...f, tier: Number(e.target.value) }))}
+                  className="px-2.5 py-1.5 text-xs">
+                  {TIERS.map((t) => <option key={t} value={t}>Tier {t}</option>)}
+                </Select>
+              </Field>
+              <Field label="Capabilities" htmlFor="tool-caps" hint="Comma-separated tags.">
+                <Input id="tool-caps" placeholder="chat, code, vision"
+                  value={form.capability_tags}
+                  onChange={(e) => setForm((f) => ({ ...f, capability_tags: e.target.value }))}
+                  className="px-2.5 py-1.5 text-xs" />
+              </Field>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <GradientButton data-testid="tool-create-submit" type="submit" size="sm" variant="success">
+                <CheckIcon size={12} />
+                Create
+              </GradientButton>
+              <GradientButton type="button" onClick={() => setCreating(false)} size="sm" variant="ghost">
+                Cancel
+              </GradientButton>
+            </div>
+            {createError && <div className="mt-2"><ErrorNote>{createError}</ErrorNote></div>}
           </form>
         )}
       </div>
 
-      {rows.length === 0 ? (
-        <div className="text-sm text-gray-500">No tools registered.</div>
-      ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-gray-500">
-              <th className="p-2">Name</th><th>Vendor</th><th>Domains</th>
+      {error && <div className="px-4 pt-3"><ErrorNote>{error}</ErrorNote></div>}
+
+      <TableScroll>
+        <Table>
+          <THead>
+            <tr>
+              <th>Name</th><th>Vendor</th><th>Domains</th>
               <th>Tier</th><th>DPA</th><th>Fallback</th><th>Continuity</th>
             </tr>
-          </thead>
-          <tbody>
+          </THead>
+          <TBody>
+            {rows.length === 0 && (
+              <EmptyRow colSpan={7}>
+                <EmptyState
+                  icon={<PackageIcon size={18} />}
+                  title="No tools registered"
+                  description="Anything not registered here is enforced as Tier 0 at the point of use."
+                />
+              </EmptyRow>
+            )}
             {rows.map((t) => (
-              <tr key={t.id} data-testid="tool-row" className="border-t align-top">
-                <td className="p-2 font-medium">{t.name}</td>
-                <td>{t.vendor}</td>
-                <td className="max-w-xs truncate">{t.domains.join(", ")}</td>
-                <td>
-                  <select
-                    data-testid={`tool-tier-${t.id}`}
-                    value={editingTier[t.id] ?? t.tier}
-                    onChange={(e) => setEditingTier((m) => ({ ...m, [t.id]: Number(e.target.value) }))}
-                    className="rounded border px-1 py-0.5 text-xs"
-                  >
-                    {TIERS.map((tier) => <option key={tier} value={tier}>{tier}</option>)}
-                  </select>
-                  {(editingTier[t.id] ?? t.tier) !== t.tier && (
-                    <button data-testid={`tool-tier-save-${t.id}`} disabled={pending[t.id]}
-                      onClick={() => saveTier(t)}
-                      className="ml-1 rounded bg-blue-600 px-1.5 py-0.5 text-xs text-white disabled:opacity-50">
-                      Save
-                    </button>
+              <Tr key={t.id} data-testid="tool-row">
+                <Td>
+                  <div className="font-medium text-[var(--sg-fg)]">{t.name}</div>
+                  {t.capability_tags.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {t.capability_tags.map((c) => <Badge key={c}>{c}</Badge>)}
+                    </div>
                   )}
-                </td>
-                <td>{t.dpa_status}</td>
-                <td>
-                  <select
+                </Td>
+                <Td muted>{t.vendor}</Td>
+                <Td className="max-w-[22ch] truncate font-mono text-xs" title={t.domains.join(", ")}>
+                  {t.domains.join(", ")}
+                </Td>
+                <Td>
+                  <div className="flex items-center gap-1.5">
+                    <Select
+                      data-testid={`tool-tier-${t.id}`}
+                      aria-label={`Tier for ${t.name}`}
+                      value={editingTier[t.id] ?? t.tier}
+                      onChange={(e) => setEditingTier((m) => ({ ...m, [t.id]: Number(e.target.value) }))}
+                      className="w-[64px] px-2 py-1 text-xs"
+                    >
+                      {TIERS.map((tier) => <option key={tier} value={tier}>{tier}</option>)}
+                    </Select>
+                    {(editingTier[t.id] ?? t.tier) !== t.tier ? (
+                      <GradientButton data-testid={`tool-tier-save-${t.id}`} disabled={pending[t.id]}
+                        onClick={() => saveTier(t)} size="sm" className="px-2 py-1">
+                        Save
+                      </GradientButton>
+                    ) : (
+                      <TierBadge tier={t.tier} short />
+                    )}
+                  </div>
+                </Td>
+                <Td muted>{t.dpa_status}</Td>
+                <Td>
+                  <Select
                     data-testid={`tool-fallback-${t.id}`}
+                    aria-label={`Fallback tool for ${t.name}`}
                     value={t.fallback_tool_id ?? ""}
                     disabled={pending[t.id]}
                     onChange={(e) => setFallback(t, e.target.value)}
-                    className="rounded border px-1 py-0.5 text-xs"
+                    className="w-[150px] px-2 py-1 text-xs"
                   >
                     <option value="">None</option>
                     {rows.filter((o) => o.id !== t.id).map((o) => (
                       <option key={o.id} value={o.id}>{o.name} (T{o.tier})</option>
                     ))}
-                  </select>
-                </td>
-                <td><ContinuityToggle toolId={t.id} status={t.continuity_status} onChanged={load} /></td>
-              </tr>
+                  </Select>
+                </Td>
+                <Td><ContinuityToggle toolId={t.id} status={t.continuity_status} onChanged={load} /></Td>
+              </Tr>
             ))}
-          </tbody>
-        </table>
-      )}
+          </TBody>
+        </Table>
+      </TableScroll>
     </div>
   );
 }

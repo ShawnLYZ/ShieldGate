@@ -1,13 +1,22 @@
+import { ICON_SPINNER } from "./icons";
+import { noticeStack } from "./notice-stack";
+
+/**
+ * Shown only when a classify call is likely to escalate to the local inference
+ * layer (content.ts predicts the backend's own gate), which is the one path
+ * slow enough that silence would read as the site being broken. The copy names
+ * *why* it is slow rather than just spinning.
+ */
 export function showPendingIndicator(root: ShadowRoot): () => void {
   const el = document.createElement("div");
+  el.className = "sg-pending";
   el.setAttribute("data-testid", "sg-pending");
-  el.textContent = "Checking this prompt…";
-  Object.assign(el.style, {
-    position: "fixed", bottom: "16px", right: "16px", zIndex: "2147483647",
-    background: "#101828", color: "#fff", padding: "10px 14px", borderRadius: "8px",
-    font: "13px system-ui",
-  });
-  root.appendChild(el);
+  el.setAttribute("role", "status");
+  const text = document.createElement("span");
+  text.textContent = "Checking this prompt…";
+  el.innerHTML = ICON_SPINNER;
+  el.appendChild(text);
+  noticeStack(root).appendChild(el);
   return () => el.remove();
 }
 

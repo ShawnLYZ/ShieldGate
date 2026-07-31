@@ -1,12 +1,18 @@
 import { MatrixEditor } from "@/components/matrix-editor";
+import { Card } from "@/components/ui/card";
+import { PageHeader, PageShell } from "@/components/ui/page";
 
 export default function PolicyMatrix() {
   return (
-    <main className="p-8">
-      <h1 className="mb-6 text-2xl font-semibold">Policy matrix</h1>
-      <div className="rounded-lg border bg-white p-4">
+    <PageShell className="max-w-4xl">
+      <PageHeader
+        eyebrow="Configure"
+        title="Policy matrix"
+        description="Data category × tool tier → action. This is the whole enforcement rule set; saving bumps the policy version, and every extension picks the new one up on its next snapshot sync."
+      />
+      <Card>
         <MatrixEditor />
-      </div>
-    </main>
+      </Card>
+    </PageShell>
   );
 }

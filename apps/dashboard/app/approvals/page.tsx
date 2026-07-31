@@ -1,12 +1,18 @@
 import { ApprovalQueue } from "@/components/approval-queue";
+import { Card } from "@/components/ui/card";
+import { PageHeader, PageShell } from "@/components/ui/page";
 
 export default function Approvals() {
   return (
-    <main className="p-8">
-      <h1 className="mb-6 text-2xl font-semibold">Approvals</h1>
-      <div className="rounded-lg border bg-white p-4">
+    <PageShell>
+      <PageHeader
+        eyebrow="Govern"
+        title="Approvals"
+        description="Tool-access requests move through two reviewers — a manager and an admin. The risk score recommends a tier band; the reviewer assigns the tier that actually lands in the registry."
+      />
+      <Card>
         <ApprovalQueue />
-      </div>
-    </main>
+      </Card>
+    </PageShell>
   );
 }

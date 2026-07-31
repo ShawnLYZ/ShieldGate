@@ -3,6 +3,16 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import { authedPost } from "@/lib/api";
 import type { WatchItemRow } from "@/lib/types";
+import { Badge, StatusBadge } from "@/components/ui/badge";
+import { GradientButton } from "@/components/ui/gradient-button";
+import {
+  AlertTriangleIcon,
+  ExternalLinkIcon,
+  SpinnerIcon,
+  TelescopeIcon,
+} from "@/components/ui/icons";
+import { EmptyState, ErrorNote, Loading } from "@/components/ui/page";
+import { EmptyRow, TBody, THead, Table, TableScroll, Td, Tr } from "@/components/ui/table";
 
 export function WatchList() {
   const [rows, setRows] = useState<WatchItemRow[]>([]);
@@ -44,51 +54,80 @@ export function WatchList() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-2 border-b pb-4">
-        <button data-testid="watch-refresh" onClick={refresh} disabled={refreshing}
-          className="rounded bg-blue-600 px-3 py-1.5 text-xs text-white disabled:opacity-50">
-          {refreshing ? "Refreshing…" : "Refresh"}
-        </button>
-        {refreshResult && <span className="text-xs text-gray-600">{refreshResult}</span>}
-        {error && <span className="text-xs text-red-600">{error}</span>}
+      <div className="flex flex-wrap items-center gap-3 border-b border-[var(--sg-border)] px-4 py-3">
+        <GradientButton data-testid="watch-refresh" onClick={refresh} disabled={refreshing} size="sm">
+          {refreshing ? <SpinnerIcon size={13} /> : <TelescopeIcon size={13} />}
+          {refreshing ? "Refreshing…" : "Refresh feeds"}
+        </GradientButton>
+        {lastMatrixReview && (
+          <span className="text-xs text-[var(--sg-muted)]">
+            Matrix last bumped {new Date(lastMatrixReview).toLocaleDateString()}
+          </span>
+        )}
+        {refreshResult && <span className="text-xs text-[var(--sg-allow-text)]">{refreshResult}</span>}
+        {error && <ErrorNote className="w-full">{error}</ErrorNote>}
       </div>
 
       {!loaded ? (
-        <div className="text-sm text-gray-500">Loading…</div>
-      ) : rows.length === 0 ? (
-        <div className="text-sm text-gray-500">No regulatory watch items yet. Configure feeds under Settings, then Refresh.</div>
+        <Loading />
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-gray-500">
-              <th className="p-2">Title</th><th>Source</th><th>Tags</th><th>Published</th><th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => {
-              const isStale = staleCutoff !== null && r.published_at !== null
-                && new Date(r.published_at).getTime() > staleCutoff;
-              return (
-                <tr key={r.id} data-testid="watch-row" className="border-t">
-                  <td className="p-2">
-                    <a href={r.url} target="_blank" rel="noreferrer" className="font-medium text-blue-700 hover:underline">
-                      {r.title}
-                    </a>
-                    {isStale && (
-                      <span data-testid="watch-stale-flag" className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
-                        matrix may be stale
-                      </span>
-                    )}
-                  </td>
-                  <td>{r.source}</td>
-                  <td>{r.matched_tags.join(", ")}</td>
-                  <td>{r.published_at ? new Date(r.published_at).toLocaleDateString() : "—"}</td>
-                  <td>{r.status}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <TableScroll>
+          <Table>
+            <THead>
+              <tr><th>Title</th><th>Source</th><th>Tags</th><th>Published</th><th>Status</th></tr>
+            </THead>
+            <TBody>
+              {rows.length === 0 && (
+                <EmptyRow colSpan={5}>
+                  <EmptyState
+                    icon={<TelescopeIcon size={18} />}
+                    title="No regulatory watch items yet"
+                    description="Configure feeds under Settings, then Refresh."
+                  />
+                </EmptyRow>
+              )}
+              {rows.map((r) => {
+                const isStale = staleCutoff !== null && r.published_at !== null
+                  && new Date(r.published_at).getTime() > staleCutoff;
+                return (
+                  <Tr key={r.id} data-testid="watch-row">
+                    <Td>
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 font-medium text-[var(--sg-accent-text)] hover:underline"
+                      >
+                        <span className="max-w-[40ch] truncate">{r.title}</span>
+                        <ExternalLinkIcon size={12} className="shrink-0" />
+                      </a>
+                      {isStale && (
+                        <span data-testid="watch-stale-flag" className="ml-2 inline-block align-middle">
+                          <Badge tone="warn">
+                            <AlertTriangleIcon size={11} />
+                            matrix may be stale
+                          </Badge>
+                        </span>
+                      )}
+                    </Td>
+                    <Td muted>{r.source}</Td>
+                    <Td>
+                      <div className="flex flex-wrap gap-1">
+                        {r.matched_tags.length
+                          ? r.matched_tags.map((t) => <Badge key={t}>{t}</Badge>)
+                          : <span className="text-[var(--sg-faint)]">—</span>}
+                      </div>
+                    </Td>
+                    <Td className="whitespace-nowrap tabular-nums" muted>
+                      {r.published_at ? new Date(r.published_at).toLocaleDateString() : "—"}
+                    </Td>
+                    <Td><StatusBadge status={r.status} /></Td>
+                  </Tr>
+                );
+              })}
+            </TBody>
+          </Table>
+        </TableScroll>
       )}
     </div>
   );

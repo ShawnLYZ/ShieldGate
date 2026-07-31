@@ -1,12 +1,18 @@
 import { AuditViewer } from "@/components/audit-viewer";
+import { Card } from "@/components/ui/card";
+import { PageHeader, PageShell } from "@/components/ui/page";
 
 export default function Audit() {
   return (
-    <main className="p-8">
-      <h1 className="mb-6 text-2xl font-semibold">Audit trail</h1>
-      <div className="rounded-lg border bg-white p-4">
+    <PageShell>
+      <PageHeader
+        eyebrow="Evidence"
+        title="Audit trail"
+        description="An append-only hash chain. Verify recomputes every link server-side and names the first sequence number that fails — raw prompt text is never stored, only a masked excerpt."
+      />
+      <Card>
         <AuditViewer />
-      </div>
-    </main>
+      </Card>
+    </PageShell>
   );
 }

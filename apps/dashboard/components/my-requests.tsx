@@ -3,6 +3,13 @@ import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { authedPost } from "@/lib/api";
 import { createClient } from "@/lib/supabase";
 import type { ApprovalRequestRow } from "@/lib/types";
+import { StatusBadge } from "@/components/ui/badge";
+import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GradientButton } from "@/components/ui/gradient-button";
+import { Field, Input, Textarea } from "@/components/ui/field";
+import { CheckCircleIcon, InboxIcon, SpinnerIcon } from "@/components/ui/icons";
+import { EmptyState, ErrorNote } from "@/components/ui/page";
+import { EmptyRow, TBody, THead, Table, TableScroll, Td, Tr } from "@/components/ui/table";
 
 // Self-service page: a signed-in user submits a tool-access request and watches their own
 // requests progress. Reads are RLS-scoped (an employee sees only their own rows via the
@@ -48,54 +55,101 @@ export function MyRequests() {
   }
 
   return (
-    <div className="space-y-6">
-      <form data-testid="request-tool-form" onSubmit={submit} className="rounded-lg border bg-white p-4">
-        <h2 className="mb-2 text-lg font-medium">Request a tool</h2>
-        <div className="flex flex-col gap-2">
-          <input data-testid="request-tool-name" required placeholder="Tool name (e.g. Perplexity)"
-            value={toolName} onChange={(e) => setToolName(e.target.value)}
-            className="rounded border px-3 py-2 text-sm" />
-          <input data-testid="request-tool-url" placeholder="Tool URL (optional)"
-            value={toolUrl} onChange={(e) => setToolUrl(e.target.value)}
-            className="rounded border px-3 py-2 text-sm" />
-          <textarea data-testid="request-purpose" required placeholder="What do you need it for?"
-            value={purpose} onChange={(e) => setPurpose(e.target.value)} rows={3}
-            className="rounded border px-3 py-2 text-sm" />
+    <div className="grid gap-4">
+      <Card>
+        <CardHeader>
           <div>
-            <button data-testid="request-submit" type="submit" disabled={pending}
-              className="rounded bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50">
-              {pending ? "Submitting…" : "Submit request"}
-            </button>
-            {submitted && <span className="ml-2 text-sm text-green-700">Request submitted.</span>}
-            {error && <span className="ml-2 text-sm text-red-600">{error}</span>}
+            <CardTitle>Request a tool</CardTitle>
+            <CardDescription>
+              Two reviewers see this — your manager, then an admin. A clear purpose is what moves
+              it fastest.
+            </CardDescription>
           </div>
-        </div>
-      </form>
+        </CardHeader>
+        <CardBody>
+          <form data-testid="request-tool-form" onSubmit={submit} className="grid gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Tool name" htmlFor="req-name">
+                <Input
+                  id="req-name"
+                  data-testid="request-tool-name"
+                  required
+                  placeholder="e.g. Perplexity"
+                  value={toolName}
+                  onChange={(e) => setToolName(e.target.value)}
+                />
+              </Field>
+              <Field label="Tool URL" htmlFor="req-url" hint="Optional — helps the reviewer identify the vendor.">
+                <Input
+                  id="req-url"
+                  data-testid="request-tool-url"
+                  placeholder="https://…"
+                  value={toolUrl}
+                  onChange={(e) => setToolUrl(e.target.value)}
+                />
+              </Field>
+            </div>
+            <Field label="What do you need it for?" htmlFor="req-purpose">
+              <Textarea
+                id="req-purpose"
+                data-testid="request-purpose"
+                required
+                placeholder="Describe the task and the kind of data involved."
+                value={purpose}
+                onChange={(e) => setPurpose(e.target.value)}
+                rows={3}
+              />
+            </Field>
+            <div className="flex flex-wrap items-center gap-3">
+              <GradientButton data-testid="request-submit" type="submit" size="sm" disabled={pending}>
+                {pending ? <SpinnerIcon size={13} /> : null}
+                {pending ? "Submitting…" : "Submit request"}
+              </GradientButton>
+              {submitted && (
+                <span className="flex items-center gap-1.5 text-sm text-[var(--sg-allow-text)]">
+                  <CheckCircleIcon size={14} />
+                  Request submitted.
+                </span>
+              )}
+            </div>
+            {error && <ErrorNote>{error}</ErrorNote>}
+          </form>
+        </CardBody>
+      </Card>
 
-      <div className="rounded-lg border bg-white p-4">
-        <h2 className="mb-2 text-lg font-medium">My requests</h2>
-        {rows.length === 0 ? (
-          <div className="text-sm text-gray-500">No requests yet.</div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-gray-500"><th className="p-2">Tool</th><th>Status</th><th>SLA</th></tr>
-            </thead>
-            <tbody>
+      <Card>
+        <CardHeader>
+          <CardTitle>My requests</CardTitle>
+        </CardHeader>
+        <TableScroll>
+          <Table>
+            <THead>
+              <tr><th>Tool</th><th>Status</th><th>SLA</th></tr>
+            </THead>
+            <TBody>
+              {rows.length === 0 && (
+                <EmptyRow colSpan={3}>
+                  <EmptyState
+                    icon={<InboxIcon size={18} />}
+                    title="No requests yet"
+                    description="Anything you ask for above shows up here with its review state."
+                  />
+                </EmptyRow>
+              )}
               {rows.map((r) => (
-                <tr key={r.id} data-testid="my-request-row" className="border-t">
-                  <td className="p-2">
-                    <div className="font-medium">{r.tool_name}</div>
-                    <div className="text-xs text-gray-500">{r.purpose}</div>
-                  </td>
-                  <td className="p-2">{r.status}</td>
-                  <td className="p-2">{r.sla_state.replace("_", " ")}</td>
-                </tr>
+                <Tr key={r.id} data-testid="my-request-row">
+                  <Td>
+                    <div className="font-medium text-[var(--sg-fg)]">{r.tool_name}</div>
+                    <div className="mt-0.5 max-w-[40ch] text-xs text-[var(--sg-muted)]">{r.purpose}</div>
+                  </Td>
+                  <Td><StatusBadge status={r.status} /></Td>
+                  <Td><StatusBadge status={r.sla_state} /></Td>
+                </Tr>
               ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+            </TBody>
+          </Table>
+        </TableScroll>
+      </Card>
     </div>
   );
 }

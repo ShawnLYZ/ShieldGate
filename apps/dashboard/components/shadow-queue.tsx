@@ -3,13 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import { authedPost, getAccessToken } from "@/lib/api";
 import type { ShadowCandidateRow } from "@/lib/types";
-
-const STATUS_BADGE: Record<ShadowCandidateRow["status"], string> = {
-  new: "bg-amber-100 text-amber-800",
-  under_review: "bg-blue-100 text-blue-800",
-  promoted: "bg-green-100 text-green-800",
-  dismissed: "bg-gray-100 text-gray-600",
-};
+import { StatusBadge } from "@/components/ui/badge";
+import { GradientButton } from "@/components/ui/gradient-button";
+import { CheckIcon, RadarIcon, SpinnerIcon, XIcon } from "@/components/ui/icons";
+import { EmptyState, ErrorNote, Loading } from "@/components/ui/page";
+import { EmptyRow, TBody, THead, Table, TableScroll, Td, Tr } from "@/components/ui/table";
 
 export function ShadowQueue() {
   const [rows, setRows] = useState<ShadowCandidateRow[]>([]);
@@ -72,66 +70,88 @@ export function ShadowQueue() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-2 border-b pb-4">
-        <input ref={fileInput} type="file" accept=".csv" data-testid="shadow-import-input"
-          className="text-sm" />
-        <button onClick={importCsv} disabled={importPending}
+      <div className="flex flex-wrap items-center gap-3 border-b border-[var(--sg-border)] px-4 py-3">
+        <label className="min-w-0 flex-1 sm:max-w-sm">
+          <span className="mb-1 block text-xs font-medium text-[var(--sg-fg-secondary)]">
+            Identity-provider export (CSV)
+          </span>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".csv"
+            data-testid="shadow-import-input"
+            className="w-full cursor-pointer text-xs text-[var(--sg-muted)] file:mr-3 file:cursor-pointer file:rounded-[8px] file:border file:border-[var(--sg-border-strong)] file:bg-[var(--sg-surface-2)] file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-[var(--sg-fg)] hover:file:bg-[var(--sg-surface-3)]"
+          />
+        </label>
+        <GradientButton
+          onClick={importCsv}
+          disabled={importPending}
           data-testid="shadow-import-submit"
-          className="rounded bg-blue-600 px-3 py-1.5 text-xs text-white disabled:opacity-50">
+          size="sm"
+          className="mt-4"
+        >
+          {importPending ? <SpinnerIcon size={13} /> : null}
           {importPending ? "Importing…" : "Import IdP CSV"}
-        </button>
-        {importResult && <span className="text-xs text-gray-600">{importResult}</span>}
+        </GradientButton>
+        {importResult && (
+          <span className="text-xs text-[var(--sg-muted)]">{importResult}</span>
+        )}
       </div>
 
-      {error && <div className="mb-3 text-sm text-red-600">{error}</div>}
+      {error && <div className="px-4 pt-3"><ErrorNote>{error}</ErrorNote></div>}
 
       {!loaded ? (
-        <div className="text-sm text-gray-500">Loading…</div>
-      ) : rows.length === 0 ? (
-        <div className="text-sm text-gray-500">No shadow AI candidates found. Import an IdP log to discover unregistered tools.</div>
+        <Loading />
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-gray-500">
-              <th className="p-2">Domain</th><th>Source</th><th>Users</th>
-              <th>First seen</th><th>Last seen</th><th>Status</th><th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} data-testid="shadow-row" className="border-t">
-                <td className="p-2 font-medium">{r.domain}</td>
-                <td>{r.source}</td>
-                <td>{r.user_count}</td>
-                <td>{r.first_seen}</td>
-                <td>{r.last_seen}</td>
-                <td>
-                  <span className={`rounded px-2 py-0.5 text-xs ${STATUS_BADGE[r.status]}`}>
-                    {r.status.replace("_", " ")}
-                  </span>
-                </td>
-                <td>
-                  {r.status === "new" || r.status === "under_review" ? (
-                    <div className="flex gap-1">
-                      <button data-testid={`shadow-promote-${r.id}`} disabled={pending[r.id]}
-                        onClick={() => act(r.id, "promote")}
-                        className="rounded bg-green-600 px-2 py-1 text-xs text-white disabled:opacity-50">
-                        Promote
-                      </button>
-                      <button data-testid={`shadow-dismiss-${r.id}`} disabled={pending[r.id]}
-                        onClick={() => act(r.id, "dismiss")}
-                        className="rounded bg-gray-500 px-2 py-1 text-xs text-white disabled:opacity-50">
-                        Dismiss
-                      </button>
-                    </div>
-                  ) : (
-                    <span className="text-xs text-gray-400">—</span>
-                  )}
-                </td>
+        <TableScroll>
+          <Table>
+            <THead>
+              <tr>
+                <th>Domain</th><th>Source</th><th>Users</th>
+                <th>First seen</th><th>Last seen</th><th>Status</th><th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </THead>
+            <TBody>
+              {rows.length === 0 && (
+                <EmptyRow colSpan={7}>
+                  <EmptyState
+                    icon={<RadarIcon size={18} />}
+                    title="No shadow AI candidates found"
+                    description="Import an identity-provider log above to discover AI domains that are in use but not in the tool registry."
+                  />
+                </EmptyRow>
+              )}
+              {rows.map((r) => (
+                <Tr key={r.id} data-testid="shadow-row">
+                  <Td className="whitespace-nowrap font-medium text-[var(--sg-fg)]">{r.domain}</Td>
+                  <Td muted>{r.source}</Td>
+                  <Td numeric>{r.user_count}</Td>
+                  <Td className="whitespace-nowrap tabular-nums" muted>{r.first_seen}</Td>
+                  <Td className="whitespace-nowrap tabular-nums" muted>{r.last_seen}</Td>
+                  <Td><StatusBadge status={r.status} /></Td>
+                  <Td>
+                    {r.status === "new" || r.status === "under_review" ? (
+                      <div className="flex gap-1">
+                        <GradientButton data-testid={`shadow-promote-${r.id}`} disabled={pending[r.id]}
+                          onClick={() => act(r.id, "promote")} size="sm" variant="success">
+                          <CheckIcon size={12} />
+                          Promote
+                        </GradientButton>
+                        <GradientButton data-testid={`shadow-dismiss-${r.id}`} disabled={pending[r.id]}
+                          onClick={() => act(r.id, "dismiss")} size="sm" variant="neutral">
+                          <XIcon size={12} />
+                          Dismiss
+                        </GradientButton>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-[var(--sg-faint)]">—</span>
+                    )}
+                  </Td>
+                </Tr>
+              ))}
+            </TBody>
+          </Table>
+        </TableScroll>
       )}
     </div>
   );

@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { authedGet } from "@/lib/api";
+import { CoinsIcon, InfoIcon } from "@/components/ui/icons";
+import { StatTile } from "@/components/ui/stat";
 
 interface CostAvoidance {
   total: number;
@@ -18,6 +20,10 @@ function formatCurrency(n: number): string {
 // standalone number -- that's reserved for table/axis columns). A single
 // current value with no trend is exactly the "stat tile, not a chart" case
 // from choosing-a-form.md.
+//
+// The disclosure is a native <details> rather than a hover tooltip on purpose:
+// a derived money figure has to be auditable on a touch device and by keyboard,
+// and hover is neither.
 export function CostCounter() {
   const [data, setData] = useState<CostAvoidance | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,28 +37,41 @@ export function CostCounter() {
   }, []);
 
   return (
-    <div data-testid="cost-counter" className="rounded-lg border bg-white p-4">
-      <div className="flex items-center gap-1 text-sm text-gray-500">
-        <span>Cost avoidance</span>
-        {data && (
-          <details className="relative inline-block">
-            <summary className="cursor-pointer list-none text-gray-400" aria-label="Formula and assumptions">
-              (?)
-            </summary>
-            <div className="absolute left-0 top-5 z-10 w-64 rounded border bg-white p-2 text-xs text-gray-700 shadow-lg">
-              <div className="mb-1 font-medium">Formula</div>
-              <div className="mb-2">{data.formula}</div>
-              <div className="mb-1 font-medium">Assumptions</div>
-              <pre className="whitespace-pre-wrap break-words">{JSON.stringify(data.assumptions, null, 2)}</pre>
-            </div>
-          </details>
-        )}
-      </div>
-      {error ? (
-        <div className="text-sm text-red-600">{error}</div>
-      ) : (
-        <div className="text-3xl font-semibold">{data ? formatCurrency(data.total) : "…"}</div>
-      )}
-    </div>
+    <StatTile
+      data-testid="cost-counter"
+      tone="allow"
+      icon={<CoinsIcon size={16} />}
+      label={
+        <>
+          <span>Cost avoidance</span>
+          {data && (
+            <details className="relative inline-block">
+              <summary
+                className="ml-0.5 inline-flex cursor-pointer list-none items-center text-[var(--sg-faint)] transition-colors hover:text-[var(--sg-fg-secondary)] [&::-webkit-details-marker]:hidden"
+                aria-label="Formula and assumptions"
+              >
+                <InfoIcon size={13} />
+              </summary>
+              <div className="absolute left-0 top-6 z-20 w-72 rounded-[var(--sg-radius-sm)] border border-[var(--sg-border-strong)] bg-[var(--sg-surface)] p-3 text-xs font-normal text-[var(--sg-fg-secondary)] shadow-[var(--sg-shadow-lg)]">
+                <div className="mb-1 font-semibold text-[var(--sg-fg)]">Formula</div>
+                <div className="mb-3 leading-relaxed">{data.formula}</div>
+                <div className="mb-1 font-semibold text-[var(--sg-fg)]">Assumptions</div>
+                <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words rounded bg-[var(--sg-surface-2)] p-2 font-mono text-[11px] leading-relaxed">
+                  {JSON.stringify(data.assumptions, null, 2)}
+                </pre>
+              </div>
+            </details>
+          )}
+        </>
+      }
+      value={
+        error ? (
+          <span className="text-base font-medium text-[var(--sg-block-text)]">{error}</span>
+        ) : (
+          <span>{data ? formatCurrency(data.total) : "…"}</span>
+        )
+      }
+      hint={data ? "Blocked exposure × modelled incident cost" : undefined}
+    />
   );
 }

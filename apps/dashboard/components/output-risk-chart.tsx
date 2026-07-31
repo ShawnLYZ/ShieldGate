@@ -2,70 +2,70 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { authedGet } from "@/lib/api";
+import { useChartTheme } from "@/lib/chart-theme";
 import type { IncidentRow } from "@/lib/types";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartTooltip } from "@/components/ui/chart-tooltip";
+import { GradientButton } from "@/components/ui/gradient-button";
+import { ErrorNote, Loading } from "@/components/ui/page";
+import { TBody, THead, Table, TableScroll, Td, Tr } from "@/components/ui/table";
 
 // dataviz skill (choosing-a-form.md): "Compare magnitude, low -> high | bar/column
 // | sequential (one hue)" -- same job as usage-by-department.tsx (one measure,
 // event count, across a nominal category), just two categories worth grouping
 // by (tool, department), so this reuses that component's exact treatment
-// rather than inventing a second chart language: same validated slot-1 blue
-// (#2a78d6, node scripts/validate_palette.js "#2a78d6" --mode light -> PASS),
-// same single-hue-no-legend rule (one series per chart, the title names it),
-// same table-view twin per chart.
-const BAR_COLOR = "#2a78d6";
-const GRID_COLOR = "#e1e0d9";
-const AXIS_COLOR = "#898781";
-const SURFACE = "#fcfcfb";
-
+// rather than inventing a second chart language: same validated slot-1 hue
+// (via lib/chart-theme's `solo`), same single-hue-no-legend rule (one series
+// per chart, the title names it), same table-view twin per chart.
 interface Count { key: string; count: number }
-
-function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: Count }> }) {
-  if (!active || !payload?.length) return null;
-  const { key, count } = payload[0].payload;
-  return (
-    <div className="rounded border px-2 py-1 text-xs shadow" style={{ background: SURFACE }}>
-      <div className="font-semibold">{count.toLocaleString()}</div>
-      <div className="text-gray-500">{key}</div>
-    </div>
-  );
-}
 
 function GroupedBar({ title, data, showTable, onToggle }: {
   title: string; data: Count[]; showTable: boolean; onToggle: () => void;
 }) {
+  const chart = useChartTheme();
   return (
-    <div className="rounded-lg border bg-white p-4">
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-lg font-medium">{title}</h2>
-        <button onClick={onToggle} className="text-xs text-gray-500 underline">
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <GradientButton onClick={onToggle} size="sm" variant="ghost">
           {showTable ? "View as chart" : "View as table"}
-        </button>
-      </div>
-      {data.length === 0 ? (
-        <div className="text-sm text-gray-500">No flagged output events.</div>
-      ) : showTable ? (
-        <table className="w-full text-sm">
-          <thead><tr className="text-left text-gray-500"><th>{title}</th><th>Flags</th></tr></thead>
-          <tbody>
-            {data.map((d) => (
-              <tr key={d.key} className="border-t"><td className="py-1">{d.key}</td><td>{d.count}</td></tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={data} barCategoryGap={2} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid stroke={GRID_COLOR} vertical={false} />
-            <XAxis dataKey="key" tick={{ fill: AXIS_COLOR, fontSize: 12 }}
-              axisLine={{ stroke: GRID_COLOR }} tickLine={false} />
-            <YAxis allowDecimals={false} tick={{ fill: AXIS_COLOR, fontSize: 12 }}
-              axisLine={false} tickLine={false} width={32} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: SURFACE, opacity: 0.6 }} />
-            <Bar dataKey="count" fill={BAR_COLOR} maxBarSize={24} radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      )}
-    </div>
+        </GradientButton>
+      </CardHeader>
+      <CardBody>
+        {data.length === 0 ? (
+          <div className="py-6 text-sm text-[var(--sg-muted)]">No flagged output events.</div>
+        ) : showTable ? (
+          <TableScroll>
+            <Table>
+              <THead><tr><th>{title}</th><th>Flags</th></tr></THead>
+              <TBody>
+                {data.map((d) => (
+                  <Tr key={d.key}>
+                    <Td>{d.key}</Td>
+                    <Td numeric>{d.count}</Td>
+                  </Tr>
+                ))}
+              </TBody>
+            </Table>
+          </TableScroll>
+        ) : (
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={data} barCategoryGap={2} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke={chart.grid} vertical={false} />
+              <XAxis dataKey="key" tick={{ fill: chart.axis, fontSize: 12 }}
+                axisLine={{ stroke: chart.grid }} tickLine={false} />
+              <YAxis allowDecimals={false} tick={{ fill: chart.axis, fontSize: 12 }}
+                axisLine={false} tickLine={false} width={32} />
+              <Tooltip
+                content={<ChartTooltip labelKey="key" unit="flags" />}
+                cursor={{ fill: chart.axis, opacity: 0.12 }}
+              />
+              <Bar dataKey="count" fill={chart.solo} maxBarSize={24} radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </CardBody>
+    </Card>
   );
 }
 
@@ -97,11 +97,11 @@ export function OutputRiskChart() {
   const byTool = useMemo(() => groupBy(rows, "tool_domain"), [rows]);
   const byDept = useMemo(() => groupBy(rows, "department"), [rows]);
 
-  if (error) return <div className="text-sm text-red-600">{error}</div>;
-  if (!loaded) return <div className="text-sm text-gray-500">Loading…</div>;
+  if (error) return <ErrorNote>{error}</ErrorNote>;
+  if (!loaded) return <Loading />;
 
   return (
-    <div data-testid="output-risk-panel" className="grid gap-6 md:grid-cols-2">
+    <div data-testid="output-risk-panel" className="grid gap-4 xl:grid-cols-2">
       <GroupedBar title="By tool" data={byTool} showTable={showToolTable} onToggle={() => setShowToolTable((s) => !s)} />
       <GroupedBar title="By department" data={byDept} showTable={showDeptTable} onToggle={() => setShowDeptTable((s) => !s)} />
     </div>

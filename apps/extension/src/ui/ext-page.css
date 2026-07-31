@@ -1,0 +1,289 @@
+/* ==========================================================================
+   Shared styling for the extension's own pages (popup + options).
+
+   These render in a normal document rather than inside the content script's
+   shadow root, so they get a real stylesheet instead of an injected string —
+   but the tokens are byte-identical to src/ui/styles.ts and to the dashboard's
+   app/globals.css. One product, three surfaces.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  --sg-bg: #0b111c;
+  --sg-surface: #111827;
+  --sg-surface-2: #172033;
+  --sg-surface-3: #1f2a41;
+  --sg-fg: #f8fafc;
+  --sg-fg-secondary: #cbd5e1;
+  --sg-muted: #93a3b8;
+  --sg-faint: #6b7c94;
+  --sg-border: #24324a;
+  --sg-border-strong: #33455f;
+  --sg-accent: #4f7cff;
+  --sg-accent-text: #93b0ff;
+  --sg-accent-soft: #16213c;
+  --sg-cyan: #22c7d9;
+  --sg-block: #ff6b5e;
+  --sg-block-text: #ff9d94;
+  --sg-block-soft: #2a1613;
+  --sg-warn: #f5a524;
+  --sg-warn-text: #fbc253;
+  --sg-warn-soft: #2a2011;
+  --sg-allow: #2fd48f;
+  --sg-allow-text: #6ee7b7;
+  --sg-allow-soft: #10241c;
+  --sg-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --sg-font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  --sg-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --sg-bg: #eef2f8;
+    --sg-surface: #ffffff;
+    --sg-surface-2: #f7f9fc;
+    --sg-surface-3: #eef2f8;
+    --sg-fg: #0d1526;
+    --sg-fg-secondary: #33415a;
+    --sg-muted: #5a6b85;
+    --sg-faint: #7c8ba3;
+    --sg-border: #dbe3ee;
+    --sg-border-strong: #bcc9db;
+    --sg-accent: #315fea;
+    --sg-accent-text: #1e46c4;
+    --sg-accent-soft: #e8effe;
+    --sg-cyan: #0a8fa3;
+    --sg-block: #c8372a;
+    --sg-block-text: #a52c20;
+    --sg-block-soft: #fdeceb;
+    --sg-warn: #a86107;
+    --sg-warn-text: #8a5006;
+    --sg-warn-soft: #fdf3e2;
+    --sg-allow: #0a7a53;
+    --sg-allow-text: #076343;
+    --sg-allow-soft: #e6f7f0;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--sg-bg);
+  color: var(--sg-fg);
+  font-family: var(--sg-font);
+  font-size: 13px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--sg-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.sg-icon { display: block; flex: none; }
+
+/* ------------------------------------------------------------------ header */
+
+.sg-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--sg-border);
+  background: var(--sg-surface);
+}
+
+.sg-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: #fff;
+  background-image: linear-gradient(
+    135deg,
+    var(--sg-accent) 0%,
+    color-mix(in srgb, var(--sg-cyan) 75%, var(--sg-accent)) 100%
+  );
+  box-shadow: 0 2px 10px -2px color-mix(in srgb, var(--sg-accent) 70%, transparent);
+}
+
+.sg-wordmark {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.sg-tagline {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sg-faint);
+}
+
+/* ------------------------------------------------------------------- chips */
+
+.sg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--sg-border-strong);
+  background: var(--sg-surface-2);
+  color: var(--sg-fg-secondary);
+  font-size: 10.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.sg-chip-block {
+  border-color: color-mix(in srgb, var(--sg-block) 45%, transparent);
+  background: var(--sg-block-soft);
+  color: var(--sg-block-text);
+}
+.sg-chip-warn {
+  border-color: color-mix(in srgb, var(--sg-warn) 45%, transparent);
+  background: var(--sg-warn-soft);
+  color: var(--sg-warn-text);
+}
+.sg-chip-allow {
+  border-color: color-mix(in srgb, var(--sg-allow) 45%, transparent);
+  background: var(--sg-allow-soft);
+  color: var(--sg-allow-text);
+}
+
+/* ------------------------------------------------------------------ fields */
+
+.sg-field { display: block; margin-bottom: 14px; }
+
+.sg-field-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sg-fg-secondary);
+}
+
+.sg-field-hint {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: var(--sg-muted);
+}
+
+.sg-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--sg-border-strong);
+  background: var(--sg-surface-2);
+  color: var(--sg-fg);
+  font-family: var(--sg-mono);
+  font-size: 12px;
+  transition: border-color 0.15s var(--sg-ease), box-shadow 0.15s var(--sg-ease);
+}
+.sg-input:hover { border-color: var(--sg-muted); }
+.sg-input:focus {
+  outline: none;
+  border-color: var(--sg-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sg-accent) 30%, transparent);
+}
+
+/* ----------------------------------------------------------------- buttons */
+/* The same three layers as the dashboard's GradientButton and the content
+   script's .sg-btn: gradient fill, inset top highlight, one-pass sheen. */
+
+.sg-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--sg-accent) 55%, transparent);
+  background-image: linear-gradient(
+    135deg,
+    var(--sg-accent) 0%,
+    color-mix(in srgb, var(--sg-cyan) 78%, var(--sg-accent)) 100%
+  );
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(0 0 0 / 0.28);
+  color: #fff;
+  font-family: var(--sg-font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.16s var(--sg-ease), box-shadow 0.2s var(--sg-ease),
+    filter 0.2s var(--sg-ease);
+}
+.sg-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.28) 45%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.62s var(--sg-ease);
+}
+.sg-btn:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.12);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.28),
+    0 6px 20px -6px color-mix(in srgb, var(--sg-accent) 45%, transparent),
+    0 2px 6px rgb(0 0 0 / 0.3);
+}
+.sg-btn:hover::after { transform: translateX(120%); }
+.sg-btn:active { transform: translateY(0); filter: saturate(0.95) brightness(0.96); }
+
+/* ------------------------------------------------------------------- lists */
+
+.sg-list { margin: 0; padding: 0; list-style: none; }
+
+.sg-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-top: 1px solid var(--sg-border);
+  font-size: 12px;
+}
+.sg-list li:first-child { border-top: 0; }
+
+.sg-list-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sg-fg);
+}
+
+.sg-empty {
+  padding: 14px 0;
+  font-size: 12px;
+  color: var(--sg-muted);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------- preferences */
+
+@media (prefers-reduced-motion: reduce) {
+  .sg-btn, .sg-btn::after { transition: none; }
+  .sg-btn:hover { transform: none; }
+  .sg-btn:hover::after { transform: translateX(-120%); }
+}
+
+@media (forced-colors: active) {
+  .sg-btn { background-image: none; border: 1px solid ButtonText; }
+  .sg-btn::after { display: none; }
+}

@@ -1,10 +1,15 @@
 import { MyRequests } from "@/components/my-requests";
+import { PageHeader, PageShell } from "@/components/ui/page";
 
 export default function MyRequestsPage() {
   return (
-    <main className="p-8">
-      <h1 className="mb-6 text-2xl font-semibold">My requests</h1>
+    <PageShell className="max-w-4xl">
+      <PageHeader
+        eyebrow="Govern"
+        title="My requests"
+        description="Ask for a tool, then watch it move through review. You only ever see your own rows — that boundary is enforced in Postgres, not here."
+      />
       <MyRequests />
-    </main>
+    </PageShell>
   );
 }

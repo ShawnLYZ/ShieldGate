@@ -3,6 +3,19 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import { authedGet, authedPost, getAccessToken } from "@/lib/api";
 import type { ApprovalRequestRow } from "@/lib/types";
+import { StatusBadge } from "@/components/ui/badge";
+import { GradientButton } from "@/components/ui/gradient-button";
+import { Input, Select } from "@/components/ui/field";
+import { EmptyState, ErrorNote } from "@/components/ui/page";
+import { EmptyRow, TBody, THead, Table, TableScroll, Td, Tr } from "@/components/ui/table";
+import {
+  BanIcon,
+  CheckIcon,
+  ClipboardCheckIcon,
+  ClockIcon,
+  DownloadIcon,
+  InfoIcon,
+} from "@/components/ui/icons";
 
 type Role = "admin" | "manager" | "employee" | null;
 
@@ -15,12 +28,6 @@ function formatCountdown(dueAt: string, slaState: ApprovalRequestRow["sla_state"
   const mins = Math.floor((diffMs % 3_600_000) / 60_000);
   return `${hours}h ${mins}m left`;
 }
-
-const SLA_BADGE: Record<ApprovalRequestRow["sla_state"], string> = {
-  on_track: "bg-green-100 text-green-800",
-  at_risk: "bg-amber-100 text-amber-800",
-  breached: "bg-red-100 text-red-800",
-};
 
 // Story 53: each decision line shows verb · reviewer · date, or "pending".
 function trailLine(decision: string | null, name?: string | null, at?: string | null): string {
@@ -49,6 +56,7 @@ export function ApprovalQueue() {
   const [tiers, setTiers] = useState<Record<string, number>>({});
   const [pending, setPending] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loaded, setLoaded] = useState(false);
   const [, forceTick] = useState(0);
 
   // Re-render periodically so SLA countdowns count down without a refetch.
@@ -89,6 +97,7 @@ export function ApprovalQueue() {
           const data = await authedGet("/api/v1/approvals") as ApprovalRequestRow[];
           if (active) setRows(data);
         } catch { /* backend briefly unreachable — keep the rows we have */ }
+        finally { if (active) setLoaded(true); }
       };
       await loadRows();
 
@@ -122,102 +131,147 @@ export function ApprovalQueue() {
   }
 
   const canDecide = role === "manager" || role === "admin";
+  const colCount = canDecide ? 7 : 6;
 
   return (
     <div>
       {canDecide && (
-        <div className="mb-2 flex justify-end">
-          <button data-testid="export-approvals" onClick={exportCsv}
-            className="rounded border px-2 py-1 text-xs hover:bg-gray-50">
+        <div className="flex justify-end border-b border-[var(--sg-border)] px-4 py-2.5">
+          <GradientButton data-testid="export-approvals" onClick={exportCsv} size="sm" variant="ghost">
+            <DownloadIcon size={13} />
             Export CSV
-          </button>
+          </GradientButton>
         </div>
       )}
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="text-left text-gray-500">
-          <th className="p-2">Tool</th><th>Department</th><th>Status</th>
-          <th>Risk score</th><th>SLA</th><th>Reviewers</th>{canDecide && <th>Decision</th>}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r) => (
-          <tr key={r.id} data-testid="approval-row" className="border-t align-top">
-            <td className="p-2">
-              <div className="font-medium">{r.tool_name}</div>
-              <div className="text-xs text-gray-500">{r.purpose}</div>
-            </td>
-            <td className="p-2">{r.department}</td>
-            <td className="p-2">{r.status}</td>
-            <td className="p-2">
-              <details>
-                <summary className="cursor-pointer">{r.risk_score ?? "—"}</summary>
-                <ul className="mt-1 text-xs text-gray-600">
-                  {Object.entries(r.risk_signals ?? {}).map(([k, v]) => (
-                    <li key={k}>{k}: {String(v)}</li>
-                  ))}
-                </ul>
-              </details>
-            </td>
-            <td className="p-2">
-              <span className={`rounded px-2 py-0.5 text-xs ${SLA_BADGE[r.sla_state]}`}>
-                {r.sla_state.replace("_", " ")}
-              </span>
-              <div className="text-xs text-gray-500">{formatCountdown(r.sla_due_at, r.sla_state)}</div>
-            </td>
-            <td className="p-2 text-xs" data-testid="decision-trail">
-              <div>Manager: {trailLine(r.manager_decision, r.manager_reviewer_name, r.manager_decided_at)}</div>
-              <div>Admin: {trailLine(r.admin_decision, r.admin_reviewer_name, r.admin_decided_at)}</div>
-              {r.assigned_tier != null && (
-                <div className="text-gray-500">assigned Tier {r.assigned_tier}</div>
-              )}
-            </td>
-            {canDecide && (
-              <td className="p-2">
-                <label className="mb-1 flex items-center gap-1 text-xs text-gray-500">
-                  Tier
-                  <select
-                    data-testid={`tier-${r.id}`}
-                    value={tiers[r.id] ?? r.assigned_tier ?? r.recommended_tier ?? 0}
-                    onChange={(e) => setTiers((t) => ({ ...t, [r.id]: Number(e.target.value) }))}
-                    className="rounded border px-1 py-0.5 text-xs"
-                  >
-                    <option value={0}>0 — unapproved</option>
-                    <option value={1}>1 — restricted</option>
-                    <option value={2}>2 — enterprise</option>
-                  </select>
-                </label>
-                <input
-                  type="text"
-                  placeholder="note (optional)"
-                  value={notes[r.id] ?? ""}
-                  onChange={(e) => setNotes((n) => ({ ...n, [r.id]: e.target.value }))}
-                  className="mb-1 w-32 rounded border px-1 py-0.5 text-xs"
-                />
-                <div className="flex gap-1">
-                  <button data-testid={`approve-${r.id}`} disabled={pending[r.id]}
-                    onClick={() => decide(r, "approve")}
-                    className="rounded bg-green-600 px-2 py-1 text-xs text-white disabled:opacity-50">
-                    Approve
-                  </button>
-                  <button data-testid={`reject-${r.id}`} disabled={pending[r.id]}
-                    onClick={() => decide(r, "reject")}
-                    className="rounded bg-red-600 px-2 py-1 text-xs text-white disabled:opacity-50">
-                    Reject
-                  </button>
-                  <button data-testid={`info-${r.id}`} disabled={pending[r.id]}
-                    onClick={() => decide(r, "info")}
-                    className="rounded bg-gray-500 px-2 py-1 text-xs text-white disabled:opacity-50">
-                    Request info
-                  </button>
-                </div>
-                {errors[r.id] && <div className="text-xs text-red-600">{errors[r.id]}</div>}
-              </td>
+      <TableScroll>
+        <Table>
+          <THead>
+            <tr>
+              <th>Tool</th><th>Department</th><th>Status</th>
+              <th>Risk score</th><th>SLA</th><th>Reviewers</th>{canDecide && <th>Decision</th>}
+            </tr>
+          </THead>
+          <TBody>
+            {rows.length === 0 && (
+              <EmptyRow colSpan={colCount}>
+                {loaded ? (
+                  <EmptyState
+                    icon={<ClipboardCheckIcon size={18} />}
+                    title="Nothing waiting on you"
+                    description="Requests raised from the extension's block panel land here, already scored."
+                  />
+                ) : (
+                  "Loading…"
+                )}
+              </EmptyRow>
             )}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+            {rows.map((r) => (
+              <Tr key={r.id} data-testid="approval-row">
+                <Td>
+                  <div className="font-medium text-[var(--sg-fg)]">{r.tool_name}</div>
+                  <div className="mt-0.5 max-w-[28ch] text-xs text-[var(--sg-muted)]">{r.purpose}</div>
+                </Td>
+                <Td muted>{r.department}</Td>
+                <Td><StatusBadge status={r.status} /></Td>
+                <Td>
+                  <details className="group">
+                    <summary className="cursor-pointer list-none tabular-nums text-[var(--sg-fg)] transition-colors hover:text-[var(--sg-accent-text)]">
+                      {r.risk_score ?? "—"}
+                      <span className="ml-1 text-[10px] text-[var(--sg-muted)] group-open:hidden">
+                        signals
+                      </span>
+                    </summary>
+                    <ul className="mt-1.5 space-y-0.5 text-[11px] text-[var(--sg-muted)]">
+                      {Object.entries(r.risk_signals ?? {}).map(([k, v]) => (
+                        <li key={k} className="flex gap-1.5">
+                          <span className="text-[var(--sg-faint)]">{k}</span>
+                          <span className="text-[var(--sg-fg-secondary)]">{String(v)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                </Td>
+                <Td>
+                  <StatusBadge status={r.sla_state} />
+                  <div className="mt-1 flex items-center gap-1 text-[11px] text-[var(--sg-muted)]">
+                    <ClockIcon size={11} />
+                    <span className="tabular-nums">{formatCountdown(r.sla_due_at, r.sla_state)}</span>
+                  </div>
+                </Td>
+                <Td className="text-xs" data-testid="decision-trail">
+                  <div className="text-[var(--sg-fg-secondary)]">
+                    <span className="text-[var(--sg-muted)]">Manager:</span>{" "}
+                    {trailLine(r.manager_decision, r.manager_reviewer_name, r.manager_decided_at)}
+                  </div>
+                  <div className="text-[var(--sg-fg-secondary)]">
+                    <span className="text-[var(--sg-muted)]">Admin:</span>{" "}
+                    {trailLine(r.admin_decision, r.admin_reviewer_name, r.admin_decided_at)}
+                  </div>
+                  {r.assigned_tier != null && (
+                    <div className="mt-0.5 text-[var(--sg-muted)]">assigned Tier {r.assigned_tier}</div>
+                  )}
+                </Td>
+                {canDecide && r.status === "auto_rejected" && (
+                  <Td>
+                    {/* auto_rejected is terminal in the approvals FSM — there is
+                        no admin path back out of it. Rendering live Approve /
+                        Reject / Info buttons here would offer a reviewer three
+                        actions that all fail server-side. */}
+                    <span className="text-xs text-[var(--sg-muted)]">
+                      Terminal — prohibited-use signature. No reviewer action available.
+                    </span>
+                  </Td>
+                )}
+                {canDecide && r.status !== "auto_rejected" && (
+                  <Td>
+                    <div className="flex w-[232px] flex-col gap-1.5">
+                      <label className="flex items-center gap-1.5 text-[11px] text-[var(--sg-muted)]">
+                        Tier
+                        <Select
+                          data-testid={`tier-${r.id}`}
+                          value={tiers[r.id] ?? r.assigned_tier ?? r.recommended_tier ?? 0}
+                          onChange={(e) => setTiers((t) => ({ ...t, [r.id]: Number(e.target.value) }))}
+                          className="flex-1 px-2 py-1 text-[11px]"
+                        >
+                          <option value={0}>0 — unapproved</option>
+                          <option value={1}>1 — restricted</option>
+                          <option value={2}>2 — enterprise</option>
+                        </Select>
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="note (optional)"
+                        aria-label={`Decision note for ${r.tool_name}`}
+                        value={notes[r.id] ?? ""}
+                        onChange={(e) => setNotes((n) => ({ ...n, [r.id]: e.target.value }))}
+                        className="px-2 py-1 text-[11px]"
+                      />
+                      <div className="flex flex-wrap gap-1">
+                        <GradientButton data-testid={`approve-${r.id}`} disabled={pending[r.id]}
+                          onClick={() => decide(r, "approve")} size="sm" variant="success">
+                          <CheckIcon size={12} />
+                          Approve
+                        </GradientButton>
+                        <GradientButton data-testid={`reject-${r.id}`} disabled={pending[r.id]}
+                          onClick={() => decide(r, "reject")} size="sm" variant="variant">
+                          <BanIcon size={12} />
+                          Reject
+                        </GradientButton>
+                        <GradientButton data-testid={`info-${r.id}`} disabled={pending[r.id]}
+                          onClick={() => decide(r, "info")} size="sm" variant="neutral">
+                          <InfoIcon size={12} />
+                          Info
+                        </GradientButton>
+                      </div>
+                      {errors[r.id] && <ErrorNote>{errors[r.id]}</ErrorNote>}
+                    </div>
+                  </Td>
+                )}
+              </Tr>
+            ))}
+          </TBody>
+        </Table>
+      </TableScroll>
     </div>
   );
 }
