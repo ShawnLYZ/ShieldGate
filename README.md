@@ -4,8 +4,7 @@ ShieldGate is a working demo of an enterprise "AI governance" system — the kin
 company would put in place to keep track of how its employees are using AI chat tools (ChatGPT,
 Claude, Gemini, and similar), without simply banning them. It was built as a response to a
 specific case study brief (see [`Case Study.md`](./Case%20Study.md)), and this README explains,
-in plain language, what problem it solves and then walks you — assuming you have **no
-programming background and none of the required software installed** — through getting it
+in plain language, what problem it solves and then walks you through getting it
 running on your own computer from a completely empty starting point.
 
 If you just want the short pitch: employees are pasting company data into AI chatbots faster
@@ -128,26 +127,6 @@ third-party AI account — everything you're about to install runs entirely on y
 This part assumes you've never used a terminal, never installed a "package manager," and don't
 have Docker, Supabase, or Ollama. It's written for Windows (PowerShell), since that's the most
 common case; a short note is added wherever macOS/Linux differs.
-
-### A few words before you start
-
-- A **terminal** (also called a "command line" or, on Windows, "PowerShell") is a text-based
-  window where you type commands instead of clicking icons. You'll open one and leave it running
-  for most of this guide. Search "PowerShell" in the Windows Start menu to open one.
-- Every gray code block below is something you **type into that terminal and press Enter**. Do
-  them one at a time, in order, and wait for each one to finish (the cursor stops blinking / you
-  get a new prompt line) before running the next.
-- Several steps say "open a **new** terminal window." That's not optional — some installers change
-  settings that only take effect in a terminal you open *after* installing them.
-- If a command prints something you don't understand but doesn't say "error" or "failed," that's
-  usually fine. If it does say error/failed, re-read the step — the fix is almost always "you
-  skipped a previous step" or "you need a new terminal window."
-- This project uses a few technical words repeatedly. Quick definitions: a **repository** ("repo")
-  is just the project's folder of files; a **dependency** is a piece of code this project needs
-  that someone else wrote, which gets downloaded rather than typed by hand; an **environment
-  variable** (or a `.env` file, which is just a text file full of them) is a setting read at
-  startup instead of being hardcoded; `localhost`/`127.0.0.1` both mean "this same computer" — so
-  `http://127.0.0.1:8000` means "a website being served by a program running right here."
 
 ### Step 1 — Install Git
 

@@ -172,7 +172,7 @@ export function ApprovalQueue() {
                   <div className="mt-0.5 max-w-[28ch] text-xs text-[var(--sg-muted)]">{r.purpose}</div>
                 </Td>
                 <Td muted>{r.department}</Td>
-                <Td><StatusBadge status={r.status} /></Td>
+                <Td><StatusBadge data-testid="approval-status" status={r.status} /></Td>
                 <Td>
                   <details className="group">
                     <summary className="cursor-pointer list-none tabular-nums text-[var(--sg-fg)] transition-colors hover:text-[var(--sg-accent-text)]">

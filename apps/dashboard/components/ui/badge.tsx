@@ -110,9 +110,16 @@ const STATUS_TONE: Record<string, BadgeTone> = {
   breached: "block",
 };
 
-export function StatusBadge({ status, className }: { status: string; className?: string }) {
+/* The visible label is humanized (`under_review` -> "under review"), so it is prose and
+   free to change. `data-status` carries the raw wire value so system tests can assert the
+   lifecycle state itself rather than the wording chosen to render it. */
+export function StatusBadge({
+  status,
+  className,
+  ...props
+}: { status: string } & Omit<BadgeProps, "tone" | "children">) {
   return (
-    <Badge tone={STATUS_TONE[status] ?? "neutral"} className={className}>
+    <Badge tone={STATUS_TONE[status] ?? "neutral"} className={className} {...props} data-status={status}>
       {status.replace(/_/g, " ")}
     </Badge>
   );

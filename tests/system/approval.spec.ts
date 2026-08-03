@@ -36,21 +36,29 @@ test.beforeAll(resetMockToolToSeedState);
 // so a tier left at 1 silently breaks those tests on the same database.
 test.afterAll(resetMockToolToSeedState);
 
+// Assert the raw lifecycle value, not the badge's visible label: StatusBadge humanizes
+// underscores (`under_review` renders as "under review"), and the row carries a second
+// StatusBadge for `sla_state` — so a row-level text match would be both coupled to
+// wording the design owns and ambiguous between the two badges.
+async function expectRowStatus(row: Locator, status: string, timeout: number) {
+  await expect(row.getByTestId("approval-status")).toHaveAttribute("data-status", status, { timeout });
+}
+
 // Local Supabase's realtime tenant shuts down after ~10s with no connected clients and
 // takes a couple seconds to reinitialize replication on the next subscriber (confirmed via
 // `docker logs supabase_realtime_...`: "Stop tenant ... because of no connected users" then
 // a fresh "Starting stream replication" ~2s after the next channel joins). A mutation that
 // commits while that reconnect is in flight can be missed by the channel entirely, not just
-// delayed — so a bare toContainText timeout can time out for real even though the backend
-// mutation already succeeded (confirmed independently via psql). A reload re-fetches the
-// row through ApprovalQueue's plain REST select on mount, which doesn't depend on the
-// realtime channel at all, so it sidesteps that cold-start race instead of racing it again.
+// delayed — so a bare wait can time out for real even though the backend mutation already
+// succeeded (confirmed independently via psql). A reload re-fetches the row through
+// ApprovalQueue's plain REST select on mount, which doesn't depend on the realtime channel
+// at all, so it sidesteps that cold-start race instead of racing it again.
 async function waitForRowStatus(dash: Page, row: Locator, status: string) {
   try {
-    await expect(row).toContainText(status, { timeout: 8_000 });
+    await expectRowStatus(row, status, 8_000);
   } catch {
     await dash.reload();
-    await expect(row).toContainText(status, { timeout: 15_000 });
+    await expectRowStatus(row, status, 15_000);
   }
 }
 
@@ -64,7 +72,7 @@ async function approveAsTier1(dash: Page, loginTestId: string, expectedStatusBef
 
   const row = dash.getByTestId("approval-row").filter({ hasText: TOOL_NAME }).first();
   await expect(row).toBeVisible({ timeout: 15_000 });
-  await expect(row).toContainText(expectedStatusBefore);
+  await expectRowStatus(row, expectedStatusBefore, 8_000);
 
   // Assign Tier 1 explicitly: the unknown-vendor risk score recommends Tier 0,
   // and the reviewer's assignment is what lands in the Tool Registry (§7).
