@@ -76,21 +76,42 @@ const GROUPS: Array<{ title: string; items: NavItem[] }> = [
   },
 ];
 
-/** Reads the caller's role once. Exposed separately from the nav so the shell
- *  can label its session chip without a second round trip. */
+/** Tracks the caller's role for the lifetime of the shell. Exposed separately
+ *  from the nav so the shell can label its session chip without a second round
+ *  trip.
+ *
+ *  This has to follow auth state, not sample it once: AppShell is mounted in the
+ *  root layout and both legs of an account switch ("Switch demo account" in the
+ *  rail, then the login picker) are client-side navigations, so the shell is
+ *  never unmounted and a mount-only read would pin the nav to whatever was true
+ *  when the tab was first opened — signed out (no role items at all), or the
+ *  previous demo account. Same subscribe-and-refetch shape as
+ *  useSessionCookieSync in lib/session.ts, for the same reason. */
 export function useRole(): Role | null {
   const [role, setRole] = useState<Role | null>(null);
   useEffect(() => {
     let active = true;
     const supabase = createClient();
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+
+    // Not awaited inside the onAuthStateChange callback below: supabase-js
+    // serialises auth work, so awaiting a PostgREST call from inside that
+    // callback can deadlock it.
+    const load = async (session: { user: { id: string } } | null) => {
+      if (!session) {
+        if (active) setRole(null);
+        return;
+      }
       const { data } = await supabase.from("profiles").select("role")
         .eq("id", session.user.id).single();
-      if (active && data) setRole(data.role as Role);
-    })();
-    return () => { active = false; };
+      if (active) setRole((data?.role as Role | undefined) ?? null);
+    };
+
+    void supabase.auth.getSession().then(({ data }) => load(data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      void load(session);
+    });
+
+    return () => { active = false; sub.subscription.unsubscribe(); };
   }, []);
   return role;
 }

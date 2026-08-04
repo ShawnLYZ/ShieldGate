@@ -78,6 +78,36 @@ test("manager sees only their own department, in both incidents and approvals", 
   await expect(dash.getByTestId("approval-row").filter({ hasText: FIN_TOOL })).toHaveCount(0);
 });
 
+// Every test above reaches /login with `goto`, which is a full document load and
+// remounts the whole React tree. A user switching accounts does not: they click
+// "Switch demo account" in the rail, which is a next/link client-side navigation
+// that keeps AppShell (mounted in the root layout) alive across the switch. The
+// role-filtered nav has to survive that, so it is asserted through the link.
+test("nav re-scopes to the new role after an in-app account switch", async ({ context }) => {
+  const dash = await context.newPage();
+  // The rail carrying data-testid="nav" is `hidden lg:flex`; the persistent
+  // context's default window is narrower than that breakpoint.
+  await dash.setViewportSize({ width: 1280, height: 900 });
+  await dash.goto("http://localhost:3000/login");
+  await dash.getByTestId("login-manager").click();
+  await dash.waitForURL("**/overview");
+
+  const nav = dash.getByTestId("nav");
+  await expect(nav.getByRole("link", { name: "Incidents" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Audit" })).toHaveCount(0);
+
+  // Client-side navigation — AppShell is never unmounted.
+  await dash.getByRole("link", { name: "Switch demo account" }).click();
+  await dash.waitForURL("**/login");
+  await dash.getByTestId("login-admin").click();
+  await dash.waitForURL("**/overview");
+
+  // Admin-only panels must appear without a manual reload.
+  await expect(nav.getByRole("link", { name: "Audit" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Shadow AI" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Decisions" })).toBeVisible();
+});
+
 test("employee is confined to their own requests", async ({ context }) => {
   const dash = await context.newPage();
   await dash.goto("http://localhost:3000/login");
