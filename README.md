@@ -39,7 +39,7 @@ of it — without ever storing the actual sensitive text anywhere.
 
 > Real screenshots from the current build.
 
-## Extension
+## Browser Extension
 | Extension (in Mock Website) | Extension (in Others Webiste) |
 |-----------|-------------------|
 | ![mock](assets/mock_website.png) | ![others](assets/others_website.png) |
