@@ -1,4 +1,24 @@
-# ShieldGate
+<div align="center">
+    <img src="assets\ShieldGate_Icon.png" alt="InternSpark Logo" width="200" height="200"/>
+    <h1>ShieldGate</h1>
+    <h3><em>Govern AI at the gate.</em></h3>
+</div>
+
+<p align="center">
+    <strong>Where every AI prompt is judged at the gate, sensitive data never leaves unprotected, and the compliant path is always the fastest way through.</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Chrome_MV3-Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" />
+  <img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
+  <img src="https://img.shields.io/badge/Next.js-Dashboard-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" />
+  <img src="https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white" />
+  <img src="https://img.shields.io/badge/TypeScript%20%2B%20Python-Monorepo-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
+</p>
+
+---
+
+# What is ShieldGate🛡️?
 
 ShieldGate is a working demo of an enterprise "AI governance" system — the kind of thing a
 company would put in place to keep track of how its employees are using AI chat tools (ChatGPT,
@@ -12,6 +32,22 @@ than anyone can write policy for it. ShieldGate sits between the employee's brow
 chat tool, decides in real time whether what's being sent is safe to send, logs everything in a
 tamper-evident way for auditors, and gives a compliance team a dashboard to see and manage all
 of it — without ever storing the actual sensitive text anywhere.
+
+---
+
+# Product Preview 📸
+
+> Real screenshots from the current build.
+
+## Extension
+| Extension (in Mock Website) | Extension (in Others Webiste) |
+|-----------|-------------------|
+| ![mock](assets/mock_website.png) | ![others](assets/others_website.png) |
+
+## Website
+| Admin | Manager | Employee |
+|-----------|-------------------|--------------|
+| ![admin](assets/admin.png) | ![manager](assets/manager.png) | ![employee](assets/employee.png) |
 
 ---
 
