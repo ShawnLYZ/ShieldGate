@@ -40,9 +40,9 @@ of it — without ever storing the actual sensitive text anywhere.
 > Real screenshots from the current build.
 
 ## Browser Extension
-| Extension (in Mock Website) | Extension (in Others Webiste) |
+| Browser Extension on AI Website | Warning |
 |-----------|-------------------|
-| ![mock](assets/mock_website.png) | ![others](assets/others_website.png) |
+| ![website](assets/website.png) | ![warning](assets/warning.gif) |
 
 ## Website
 | Admin | Manager | Employee |
