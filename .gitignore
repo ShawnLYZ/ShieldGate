@@ -25,6 +25,9 @@ __pycache__/
 supabase/.temp/
 supabase/.branches/
 
+# ── Demo script runtime (logs, pids, browser profile) ────
+.demo/
+
 # ── Test artifacts ───────────────────────────────────────
 playwright-report/
 test-results/
@@ -42,3 +45,7 @@ Additional Feature.md
 PRD.md
 ShieldGate.md
 PRD(Achieved).md
+
+# ── Editor / OS / local settings ─────────────────────────
+.agents/
+.claude/

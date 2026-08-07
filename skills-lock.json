@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "pitch-timebox": {
+      "source": "zghanw/hackathon-skills",
+      "sourceType": "github",
+      "skillPath": "skills/pitch-timebox/SKILL.md",
+      "computedHash": "54a7cb602365320fa3eb7be678d116383aa87d3feb550742d8f123d04c2828c9"
+    }
+  }
+}
