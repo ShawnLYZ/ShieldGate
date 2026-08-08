@@ -51,9 +51,9 @@ of it — without ever storing the actual sensitive text anywhere.
 
 ---
 
-## Part 1 — What problem is this solving?
+# Part 1 — What problem is this solving?
 
-### The case study, in plain language
+## The case study, in plain language
 
 [`Case Study.md`](./Case%20Study.md) describes a real, current problem: employees have started
 using AI assistants for coding, writing, analysis, and customer communication faster than their
@@ -74,7 +74,7 @@ The brief asks for a system covering three challenges, and suggests four concret
 features. Rather than paraphrase further, here is exactly what in this repository answers each
 one:
 
-### The three key challenges
+## The three key challenges
 
 **1. Getting employees to actually comply, willingly, not just writing a policy document.**
 Outright bans just push AI usage further out of sight. ShieldGate's answer is to make the
@@ -130,7 +130,7 @@ Outright bans just push AI usage further out of sight. ShieldGate's answer is to
   for a redeploy, and without changing that tool's own normal registered risk rating once it's
   reinstated.
 
-### The four example use cases
+## The four example use cases
 
 | Case study asks for… | What implements it |
 |---|---|
@@ -144,7 +144,7 @@ CSV-imported SSO/IdP sign-in logs (catching AI usage outside the browser, e.g. m
 plugins), a regulatory "horizon scan" panel, and a print-ready executive report. None of that is
 required reading to understand the core answer above.
 
-### What the three pieces are
+## What the three pieces are
 
 | Piece | What it is | Where it lives |
 |---|---|---|
@@ -158,13 +158,13 @@ third-party AI account — everything you're about to install runs entirely on y
 
 ---
 
-## Part 2 — Complete setup guide (starting from a completely empty computer)
+# Part 2 — Complete setup guide (starting from a completely empty computer)
 
 This part assumes you've never used a terminal, never installed a "package manager," and don't
 have Docker, Supabase, or Ollama. It's written for Windows (PowerShell), since that's the most
 common case; a short note is added wherever macOS/Linux differs.
 
-### Step 1 — Install Git
+## Step 1 — Install Git
 
 Git is what downloads/manages the project's source code, and Windows's Git installer also gives
 you **Git Bash**, a small Unix-like terminal you'll need later for two helper scripts.
@@ -180,7 +180,7 @@ you **Git Bash**, a small Unix-like terminal you'll need later for two helper sc
 *(macOS: `brew install git`, or just run `git --version` once — macOS offers to install it for
 you. Linux: `sudo apt install git` or your distro's equivalent.)*
 
-### Step 2 — Get the project onto your computer
+## Step 2 — Get the project onto your computer
 
 If you haven't already, get this project's folder onto your computer (for example, by cloning it
 from wherever you were given access to it, or unzipping a folder someone sent you named
@@ -192,7 +192,7 @@ cd path\to\ShieldGate
 
 Every command in the rest of this guide assumes your terminal is sitting inside this folder.
 
-### Step 3 — Install Node.js (JavaScript runtime)
+## Step 3 — Install Node.js (JavaScript runtime)
 
 Both the extension and the dashboard are written in TypeScript/JavaScript, which needs Node.js
 installed to run.
@@ -209,7 +209,7 @@ installed to run.
 *(macOS: `brew install node@24`. Linux: use [nvm](https://github.com/nvm-sh/nvm) or your distro's
 Node 24 package.)*
 
-### Step 4 — Turn on pnpm (the package manager this project uses)
+## Step 4 — Turn on pnpm (the package manager this project uses)
 
 This project doesn't use plain `npm` to install its JavaScript dependencies — it uses `pnpm`, and
 pins an exact version. Node ships a tool called Corepack that can install and pin it for you.
@@ -228,7 +228,7 @@ pnpm -v
 You should see `9.10.0`. If `corepack` says it isn't recognized, run `npm install -g corepack`
 first and repeat the two commands above.
 
-### Step 5 — Install uv (Python package manager)
+## Step 5 — Install uv (Python package manager)
 
 The backend is written in Python and uses a tool called [`uv`](https://docs.astral.sh/uv/) to
 manage it. You do **not** need to separately install Python yourself — `uv` will automatically
@@ -249,7 +249,7 @@ uv --version
 
 *(macOS/Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`.)*
 
-### Step 6 — Install Docker Desktop
+## Step 6 — Install Docker Desktop
 
 The project's database (Postgres) and authentication service run locally inside **Docker
 containers** — small, self-contained environments that behave the same on every computer. Docker
@@ -279,7 +279,7 @@ You do **not** need to separately install the Supabase CLI — it's already list
 project's own dependencies and will be installed automatically in the next step, usable as
 `pnpm exec supabase ...`.
 
-### Step 7 — Install the project's own dependencies
+## Step 7 — Install the project's own dependencies
 
 Now that all the underlying tools exist, install everything this specific project needs. Run
 these three commands from the project's root folder, in order (each depends on the previous one
@@ -302,7 +302,7 @@ pnpm gen:policy
 
 None of these three commands need Docker running yet — they only touch files on your own disk.
 
-### Step 8 — Start the local database (Supabase)
+## Step 8 — Start the local database (Supabase)
 
 Now start the local Postgres + authentication stack. This uses the Docker containers you just
 confirmed are working, so make sure Docker Desktop is still open and running.
@@ -324,7 +324,7 @@ pnpm exec supabase status
 From that output, find the line that starts with `anon key:` — you'll need the long string after
 it in the next step.
 
-### Step 9 — Fill in the two configuration files
+## Step 9 — Fill in the two configuration files
 
 Each of the backend and the dashboard reads its settings from a small text file that isn't
 checked into the project (since it can contain machine-specific values). Copy the provided
@@ -344,7 +344,7 @@ Open `apps/dashboard/.env.local` in any text editor (Notepad is fine) and replac
 `REPLACE_WITH_supabase_status_anon_key` with the `anon key` value you copied in Step 8, then save.
 The other two lines in that file are already correct for a local setup and don't need changes.
 
-### Step 10 — Load the database schema and demo data
+## Step 10 — Load the database schema and demo data
 
 With Supabase running and the config files filled in, create all of ShieldGate's tables and load
 its seed data (three demo accounts, the tool registry, the policy matrix):
@@ -361,7 +361,7 @@ audit events already exist):
 uv --directory apps/backend run python -m shieldgate.demo_seed
 ```
 
-### Step 11 — Start the three running pieces
+## Step 11 — Start the three running pieces
 
 Each of these keeps running in its own terminal window, so open **three separate PowerShell
 windows**, `cd` each one into the project folder, and run one command per window:
@@ -397,7 +397,7 @@ if it complains that `supabase` isn't found, either use the three-window method 
 [Supabase's own instructions](https://supabase.com/docs/guides/local-development/cli/getting-started)
 so a bare `supabase` command works too.
 
-### Step 12 — Build and load the browser extension
+## Step 12 — Build and load the browser extension
 
 The extension has to be "loaded unpacked" into Chrome — it isn't installed from the Chrome Web
 Store for this demo.
@@ -417,7 +417,7 @@ Then in Chrome:
    `sg-emp-demo-001` — both are already the correct built-in defaults for everything you just set
    up, so you shouldn't need to change anything here.
 
-### Step 13 — Confirm everything is working
+## Step 13 — Confirm everything is working
 
 - Visit <http://127.0.0.1:8000/api/v1/health> in a browser — it should return JSON with
   `"classifier_reachable"` and similar fields, meaning the backend is up.
@@ -432,7 +432,7 @@ Then in Chrome:
 If all four load, the whole stack is running. Head to Part 3 for a guided tour of what to actually
 try.
 
-### If something goes wrong
+## If something goes wrong
 
 - **`supabase start` fails or hangs** — Docker Desktop almost certainly isn't running. Open the
   Docker Desktop app and wait for it to say it's running, then try again.
@@ -452,7 +452,7 @@ try.
 
 ---
 
-## Part 3 — A guided tour (see the whole point in five minutes)
+# Part 3 — A guided tour (see the whole point in five minutes)
 
 With all three servers running and the extension loaded, this walks through the same governance
 loop described in Part 1, so you can see each case-study challenge actually working.
@@ -497,7 +497,7 @@ never sends the prompt itself.)
 
 ---
 
-## Part 4 — Optional: turn on local AI classification (Ollama)
+# Part 4 — Optional: turn on local AI classification (Ollama)
 
 Everything above already works completely without this section — the default classifier
 (`CLASSIFIER_PROVIDER=regex-only`) uses deterministic pattern matching only, with no AI model and
@@ -540,7 +540,7 @@ starts, it silently runs as `regex-only` for its whole session instead of failin
 
 ---
 
-## Everyday commands (for when you're back and don't need the full walkthrough)
+# Everyday commands (for when you're back and don't need the full walkthrough)
 
 ```bash
 pnpm typecheck                                     # TypeScript across extension/dashboard/packages
@@ -553,6 +553,16 @@ pnpm --filter extension --filter @shieldgate/policy test   # TS unit tests, no S
 pnpm --filter system-tests test                     # Playwright, needs all four services running
 ```
 
-## Where to read more
+# Where to read more
 
 - [`Case Study.md`](./Case%20Study.md) — the original brief this project answers.
+
+---
+
+# 🏆 Hackathon Achievements
+
+**Top 10 Finalist** at **Hack Attack 3.0**
+
+<p align="center">
+  <img src=assets/award.jpg alt="Award">
+</p>
